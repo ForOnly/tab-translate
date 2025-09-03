@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Side Translate Panel",
+  "version": "1.0",
+  "permissions": ["tabs", "sidePanel"],
+  "background": {
+    "service_worker": "background.bundle.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.bundle.js"]
+    }
+  ],
+  "action": {
+    "default_title": "Open Translate Panel"
+  },
+  "side_panel": {
+    "default_path": "panel.html"
+  }
+}
