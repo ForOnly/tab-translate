@@ -18,7 +18,10 @@ chrome.contextMenus.onClicked.addListener((data, tab) => {
   chrome.sidePanel.open({ tabId: tab?.id });
 
   // Store the last word in chrome.storage.session.
-  chrome.storage.session.set({ lastWord: data.selectionText });
+  setTimeout(
+    () => chrome.storage.session.set({ lastWord: data.selectionText }),
+    100
+  );
 });
 
 chrome.runtime.onMessage.addListener(
@@ -30,7 +33,10 @@ chrome.runtime.onMessage.addListener(
     console.log("@message=", message);
     if (message.action === "LAST_SELECTION_TEXT") {
       if (message.text) {
-        chrome.storage.session.set({ lastWord: message.text });
+        setTimeout(
+          () => chrome.storage.session.set({ lastWord: message.text }),
+          100
+        );
       }
     }
     return true;

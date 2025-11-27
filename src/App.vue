@@ -6,7 +6,6 @@
         <span class="material-icons">translate</span>
         <h1>Translate Panel</h1>
       </div>
-      <!-- <p class="sub-title">Highlight text anywhere to translate it.</p> -->
     </div>
 
     <!-- Translation Card -->
@@ -24,7 +23,6 @@
             >
               {{ word }}
             </div>
-            <!-- <p>{{ word || "Select a word" }}</p> -->
           </div>
         </div>
         <!-- 翻译区域 -->
@@ -39,6 +37,12 @@
 
       <!-- Controls -->
       <div class="card-controls">
+        <select v-model="selectedPlatform" @change="onPlatformChange">
+          <option v-for="p in platforms" :key="p.code" :value="p">
+            {{ p.name }}
+          </option>
+        </select>
+
         <select v-model="selectedLang" @change="onLangChange">
           <option v-for="lang in languages" :key="lang.code" :value="lang.code">
             {{ lang.name }}
@@ -78,16 +82,18 @@
 <script setup lang="ts">
 import { debounce } from "@/utils/index.ts";
 import { ref } from "vue";
+import { googlePlatform, librePlatform } from "./utils/translate";
 
 const word = ref("");
 const translation = ref("");
 const additional = ref("");
 const detectedLang = ref("auto");
-
+let globalAudio: HTMLAudioElement | null = null;
 // 支持的语言列表（完整示例）
 const languages = ref([
   { code: "en", name: "English" },
-  { code: "zh-CN", name: "中文" },
+  { code: "zh-CN", name: "中文(CN)" },
+  { code: "zh-Hans", name: "中文(Hans)" },
   { code: "fr", name: "Français" },
   { code: "de", name: "Deutsch" },
   { code: "ko", name: "한국어" },
@@ -97,6 +103,8 @@ const languages = ref([
   { code: "it", name: "Italiano" },
   { code: "pt", name: "Português" },
 ]);
+const platforms = ref<TranslatePlatform[]>([googlePlatform, librePlatform]);
+const selectedPlatform = ref<TranslatePlatform | null>(platforms.value[0]!);
 
 const selectedLang = ref("zh-CN");
 
@@ -105,11 +113,16 @@ const getLangName = (code: string) => {
   return lang ? lang.name : code;
 };
 const debouncedTranslate = debounce(() => {
-  translate(word.value, "auto", selectedLang.value).then((resp: any) => {
-    translation.value = resp.result;
-    additional.value = resp.additional;
-    detectedLang.value = resp.detectedLanguage;
-  });
+  if (!selectedPlatform || !selectedPlatform.value) {
+    return;
+  }
+  selectedPlatform.value
+    .translate(word.value, "auto", selectedLang.value)
+    .then((resp: any) => {
+      translation.value = resp.result;
+      additional.value = resp.additional;
+      detectedLang.value = resp.detectedLanguage;
+    });
 }, 200);
 const translateWord = () => {
   chrome.storage.session.get("lastWord", ({ lastWord }) => {
@@ -120,18 +133,12 @@ const translateWord = () => {
 };
 
 const onLangChange = () => translateWord();
+const onPlatformChange = () => translateWord();
 
 const onOriginInput = (event: any) => {
   const text = event.target.innerText.trim();
   word.value = text;
   debouncedTranslate();
-};
-
-const playVoice = () => {
-  if (!word.value) return;
-  const utter = new SpeechSynthesisUtterance(word.value);
-  utter.lang = selectedLang.value;
-  speechSynthesis.speak(utter);
 };
 
 async function translate(
@@ -161,12 +168,57 @@ async function translate(
   const detectedLanguage = response[2];
   return { result, additional, detectedLanguage };
 }
+/**
+ * 播放 Google TTS 音频
+ * @param text 要播放的文本
+ * @param language 语言代码，如 "zh-CN", "en"
+ */
+async function voice(text: string, language: string): Promise<void> {
+  // 如果已有音频在播放，则停止并重置
+  if (globalAudio) {
+    globalAudio.pause();
+    globalAudio.currentTime = 0;
+  }
+
+  // 生成 TTS URL 并加入随机参数避免缓存
+  const url: string =
+    "https://translate.google.com/translate_tts" +
+    "?client=tw-ob" +
+    "&ie=UTF-8" +
+    "&tl=" +
+    encodeURIComponent(language) +
+    "&q=" +
+    encodeURIComponent(text) +
+    "&_=" +
+    Date.now();
+
+  // 创建新的 audio 实例
+  globalAudio = new Audio();
+  globalAudio.src = url;
+
+  try {
+    await globalAudio.play();
+  } catch (err) {
+    console.error("音频播放失败:", err);
+  }
+}
+
+const playVoice = () => {
+  if (!word.value) return;
+  // const utter = new SpeechSynthesisUtterance(word.value);
+  // utter.lang = selectedLang.value;
+  // speechSynthesis.speak(utter);
+  voice(word.value, detectedLang.value);
+};
 
 chrome.storage.session.onChanged.addListener((changes) => {
   const lastWordChange = changes["lastWord"];
   if (!lastWordChange) return;
   translateWord();
 });
+
+// 页面加载时先执行以此
+translateWord();
 </script>
 
 <style scoped>
