@@ -10,6 +10,8 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "esModuleInterop": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./build/tsconfig.tsbuildinfo",
     "lib": ["ESNext", "DOM"],
 
     /* 不输出 .js 文件，由 Vite 处理构建 */
@@ -19,10 +21,5 @@
       "@/*": ["src/*"]
     }
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.d.ts",
-    "src/**/*.vue",
-    "src/background.ts"
-  ]
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue"]
 }
