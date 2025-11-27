@@ -18,6 +18,7 @@
           <div class="scroll-content">
             <div
               class="origin-editable"
+              :class="{ playing: isPlaying }"
               contenteditable="true"
               @input="onOriginInput"
             >
@@ -51,6 +52,7 @@
 
         <button
           class="btn-voice"
+          :class="{ playing: isPlaying }"
           :disabled="!word"
           @click="playVoice"
           :title="word ? 'Play pronunciation' : 'No word selected'"
@@ -89,6 +91,7 @@ const translation = ref("");
 const additional = ref("");
 const detectedLang = ref("auto");
 let globalAudio: HTMLAudioElement | null = null;
+const isPlaying = ref(false);
 // 支持的语言列表（完整示例）
 const languages = ref([
   { code: "en", name: "English" },
@@ -197,9 +200,14 @@ async function voice(text: string, language: string): Promise<void> {
   globalAudio.src = url;
 
   try {
+    isPlaying.value = true;
     await globalAudio.play();
+    globalAudio.onended = () => {
+      isPlaying.value = false;
+    };
   } catch (err) {
     console.error("音频播放失败:", err);
+    isPlaying.value = false;
   }
 }
 
@@ -344,6 +352,21 @@ select {
   transition: all 0.2s ease;
 }
 
+.btn-voice.playing {
+  animation: bounce 0.5s infinite alternate;
+  background-color: #0066ff;
+}
+
+/* 简单上下跳动动画 */
+@keyframes bounce {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-5px);
+  }
+}
+
 .btn-voice:hover:not(:disabled) {
   transform: scale(1.1);
   background-color: #0066ff;
@@ -399,6 +422,25 @@ select {
   color: #333;
   word-wrap: break-word;
   white-space: pre-wrap;
+}
+
+.origin-editable.playing {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 0, 0.2) 50%,
+    transparent 50%
+  );
+  background-size: 200% 100%;
+  animation: highlight 2s linear infinite;
+}
+
+@keyframes highlight {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
 }
 
 /* 内容为空时显示 placeholder */
