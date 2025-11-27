@@ -13,7 +13,16 @@
     "lib": ["ESNext", "DOM"],
 
     /* 不输出 .js 文件，由 Vite 处理构建 */
-    "noEmit": true
+    "noEmit": true,
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["src/*"]
+    }
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue", "src/background.ts"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "src/**/*.vue",
+    "src/background.ts"
+  ]
 }

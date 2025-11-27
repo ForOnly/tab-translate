@@ -17,7 +17,14 @@
           <h2>Original ({{ getLangName(detectedLang) }})</h2>
           <div class="divider"></div>
           <div class="scroll-content">
-            <p>{{ word || "Select a word" }}</p>
+            <div
+              class="origin-editable"
+              contenteditable="true"
+              @input="onOriginInput"
+            >
+              {{ word }}
+            </div>
+            <!-- <p>{{ word || "Select a word" }}</p> -->
           </div>
         </div>
         <!-- 翻译区域 -->
@@ -69,6 +76,7 @@
 </template>
 
 <script setup lang="ts">
+import { debounce } from "@/utils/index.ts";
 import { ref } from "vue";
 
 const word = ref("");
@@ -96,20 +104,28 @@ const getLangName = (code: string) => {
   const lang = languages.value.find((l) => l.code === code);
   return lang ? lang.name : code;
 };
-
+const debouncedTranslate = debounce(() => {
+  translate(word.value, "auto", selectedLang.value).then((resp: any) => {
+    translation.value = resp.result;
+    additional.value = resp.additional;
+    detectedLang.value = resp.detectedLanguage;
+  });
+}, 200);
 const translateWord = () => {
   chrome.storage.session.get("lastWord", ({ lastWord }) => {
     if (!lastWord) return;
     word.value = lastWord;
-    translate(lastWord, "auto", selectedLang.value).then((resp: any) => {
-      translation.value = resp.result;
-      additional.value = resp.additional;
-      detectedLang.value = resp.detectedLanguage;
-    });
+    debouncedTranslate();
   });
 };
 
 const onLangChange = () => translateWord();
+
+const onOriginInput = (event: any) => {
+  const text = event.target.innerText.trim();
+  word.value = text;
+  debouncedTranslate();
+};
 
 const playVoice = () => {
   if (!word.value) return;
@@ -158,8 +174,8 @@ chrome.storage.session.onChanged.addListener((changes) => {
 
 #app {
   font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  max-width: 800px;
-  margin: 2rem auto;
+  min-height: 100vh;
+  margin: 0 1rem 0 1rem;
   color: #333;
   display: flex;
   flex-direction: column;
@@ -316,5 +332,34 @@ select {
 
 .link:hover {
   text-decoration: underline;
+}
+
+/* Origin 输入区域（可编辑） */
+.origin-editable {
+  width: 100%;
+  min-height: 100%;
+  outline: none;
+  border: none;
+  padding: 0; /* 去掉多余 padding */
+  margin: 0.5rem 0 0 0; /* 和 <p> 保持一致 */
+  font-size: 0.8rem; /* 和 <p> 一致 */
+  line-height: 1.5; /* 与 p 的行高一致 */
+  color: #333;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+/* 内容为空时显示 placeholder */
+.origin-editable:empty:before {
+  content: "Select a word or type here...";
+  color: #999;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  pointer-events: none;
+}
+
+.origin-editable::-webkit-scrollbar {
+  width: 6px;
+  background: transparent;
 }
 </style>
