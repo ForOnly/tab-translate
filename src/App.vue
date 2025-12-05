@@ -1,90 +1,124 @@
 <template>
   <div id="app">
     <!-- Header -->
-    <div class="header">
-      <div class="logo">
-        <span class="material-icons">translate</span>
-        <h1>Translate Panel</h1>
+    <div class="flex flex-col items-start gap-2">
+      <div class="flex items-center gap-2">
+        <span class="material-icons text-3xl text-blue-600">translate</span>
+        <h1 class="text-3xl font-bold text-blue-600">Translate Panel</h1>
+
+        <button
+          @click="openConfigForm"
+          class="ml-4 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow transition"
+        >
+          配置平台
+        </button>
+      </div>
+    </div>
+
+    <div v-if="showConfigForm" class="modal-backdrop">
+      <div class="modal-content">
+        <PlatformConfigForm
+          :platforms="allPlatforms"
+          @updateConfig="onConfigUpdate"
+        />
+        <button @click="closeConfigForm">关闭</button>
       </div>
     </div>
 
     <!-- Translation Card -->
-    <div class="card">
-      <div class="card-content">
+    <div
+      class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow-lg p-6 flex flex-col gap-4"
+    >
+      <div class="flex flex-wrap gap-4">
         <!-- 原文区域 -->
-        <div class="text-block input-block">
-          <h2>Original ({{ getLangName(detectedLang) }})</h2>
-          <div class="divider"></div>
-          <div class="scroll-content">
-            <div
-              class="origin-editable"
-              :class="{ playing: isPlaying }"
-              contenteditable="true"
-              @input="onOriginInput"
-            >
-              {{ word }}
-            </div>
-          </div>
+        <div
+          class="flex-1 min-w-[260px] bg-white rounded-xl p-4 shadow-md flex flex-col max-h-[220px]"
+        >
+          <h2 class="text-gray-600 text-base font-medium">
+            Original ({{ getLangName(detectedLang) }})
+          </h2>
+          <div class="h-px bg-slate-300 my-2"></div>
+
+          <textarea
+            v-model="word"
+            placeholder="Select a word or type here..."
+            class="flex-1 text-sm leading-relaxed font-mono text-slate-700 resize-none outline-none bg-transparent"
+            :class="{ 'animate-pulse bg-yellow-100': isPlaying }"
+          ></textarea>
         </div>
+
         <!-- 翻译区域 -->
-        <div class="text-block output-block">
-          <h2>Translation ({{ getLangName(selectedLang) }})</h2>
-          <div class="divider"></div>
-          <div class="scroll-content">
-            <p>{{ translation }}</p>
+        <div
+          class="flex-1 min-w-[260px] bg-white rounded-xl p-4 shadow-md flex flex-col max-h-[220px]"
+        >
+          <h2 class="text-gray-600 text-base font-medium">
+            Translation ({{ getLangName(selectedLang) }})
+          </h2>
+          <div class="h-px bg-slate-300 my-2"></div>
+          <div
+            class="text-sm whitespace-pre-wrap break-all flex-1 overflow-y-auto"
+          >
+            {{ translation }}
           </div>
         </div>
       </div>
 
       <!-- Controls -->
-      <div class="card-controls">
-        <select v-model="selectedPlatform" @change="onPlatformChange">
+      <div class="flex justify-end items-center gap-4">
+        <select
+          v-model="selectedPlatform"
+          @change="onPlatformChange"
+          class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm shadow-sm"
+        >
           <option v-for="p in platforms" :key="p.code" :value="p">
             {{ p.name }}
           </option>
         </select>
 
-        <select v-model="selectedLang" @change="onLangChange">
+        <select
+          v-model="selectedLang"
+          @change="onLangChange"
+          class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm shadow-sm"
+        >
           <option v-for="lang in languages" :key="lang.code" :value="lang.code">
             {{ lang.name }}
           </option>
         </select>
 
         <button
-          class="btn-voice"
-          :class="{ playing: isPlaying }"
+          class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 text-white text-lg shadow transition"
+          :class="{ 'animate-bounce bg-blue-700': isPlaying }"
           :disabled="!word"
           @click="playVoice"
-          :title="word ? 'Play pronunciation' : 'No word selected'"
         >
           🔊
         </button>
       </div>
 
-      <!-- Additional Info -->
-      <div v-if="additional" class="additional-card" v-html="additional"></div>
+      <!-- Additional -->
+      <div
+        v-if="additional"
+        class="bg-blue-100 p-3 rounded-xl max-h-[160px] overflow-y-auto text-sm"
+        v-html="additional"
+      ></div>
 
       <!-- Footer -->
-      <div class="card-footer">
+      <div class="text-sm text-right text-gray-600">
         Detected language: {{ getLangName(detectedLang) }}
       </div>
     </div>
-
-    <p class="info">
-      Highlight or right-click text and click the Translate icon to translate
-      it.
-    </p>
-
-    <a href="https://translate.google.com/" target="_blank" class="link">
-      Google Translate
-    </a>
   </div>
 </template>
 
 <script setup lang="ts">
 import { debounce } from "@/utils/index.ts";
-import { ref } from "vue";
-import { googlePlatform, librePlatform } from "./utils/translate";
+import { onMounted, ref, watch } from "vue";
+import PlatformConfigForm from "./components/PlatformConfigForm.vue";
+import {
+  BaiduTranslatePlatform,
+  GooglePlatform,
+  LibrePlatform,
+} from "./utils/translate";
 
 const word = ref("");
 const translation = ref("");
@@ -92,34 +126,88 @@ const additional = ref("");
 const detectedLang = ref("auto");
 let globalAudio: HTMLAudioElement | null = null;
 const isPlaying = ref(false);
-// 支持的语言列表（完整示例）
-const languages = ref([
-  { code: "en", name: "English" },
-  { code: "zh-CN", name: "中文(CN)" },
-  { code: "zh-Hans", name: "中文(Hans)" },
-  { code: "fr", name: "Français" },
-  { code: "de", name: "Deutsch" },
-  { code: "ko", name: "한국어" },
-  { code: "ja", name: "日本語" },
-  { code: "es", name: "Español" },
-  { code: "ru", name: "Русский" },
-  { code: "it", name: "Italiano" },
-  { code: "pt", name: "Português" },
-]);
-const platforms = ref<TranslatePlatform[]>([googlePlatform, librePlatform]);
-const selectedPlatform = ref<TranslatePlatform | null>(platforms.value[0]!);
+const platforms = ref<TranslatePlatform[]>([]);
+const selectedPlatform = ref<TranslatePlatform | null>(null);
+const languages = ref<LanguageMapping>([]);
+const selectedLang = ref("auto");
 
-const selectedLang = ref("zh-CN");
+const showConfigForm = ref(false);
+
+const openConfigForm = () => {
+  showConfigForm.value = true;
+};
+
+const closeConfigForm = () => {
+  showConfigForm.value = false;
+};
+
+const onConfigUpdate = (configs: Record<string, Record<string, string>>) => {
+  // 遍历每个平台
+  for (const platformCode in configs) {
+    const platformConfig = configs[platformCode];
+
+    // 遍历每个平台的每个字段
+    for (const fieldKey in platformConfig) {
+      const fieldValue = platformConfig[fieldKey];
+
+      // 构建唯一存储 key，例如 "platformCode_fieldKey"
+      const storageKey = `${fieldKey}`;
+
+      // 单独保存每个字段
+      chrome.storage.local.set({ [storageKey]: fieldValue }).then(() => {
+        console.log("Value is set:", { storageKey });
+      });
+    }
+  }
+  getValidPlatforms(allPlatforms).then((res) => {
+    platforms.value = res;
+    languages.value = selectedPlatform.value?.languages ?? [];
+    selectedLang.value = languages.value[0]?.code ?? "auto";
+  });
+
+  // 关闭配置表单
+  closeConfigForm();
+};
+const allPlatforms: TranslatePlatform[] = [
+  new GooglePlatform(),
+  new LibrePlatform(),
+  new BaiduTranslatePlatform(),
+];
+
+onMounted(async () => {
+  platforms.value = await getValidPlatforms(allPlatforms);
+  selectedPlatform.value = platforms.value[0]!;
+  languages.value = selectedPlatform.value?.languages ?? [];
+  selectedLang.value = languages.value[0]?.code ?? "auto";
+});
+
+watch(word, () => {
+  debouncedTranslate();
+});
+
+const getValidPlatforms = async (
+  platforms: TranslatePlatform[]
+): Promise<TranslatePlatform[]> => {
+  // 并行检测每个平台
+  const results = await Promise.all(
+    platforms.map(async (platform) => ({
+      platform,
+      ok: await platform.checkPlatform(),
+    }))
+  );
+
+  // 过滤出可用的平台
+  return results.filter((r) => r.ok).map((r) => r.platform);
+};
 
 const getLangName = (code: string) => {
-  const lang = languages.value.find((l) => l.code === code);
+  const lang = languages.value?.find((l) => l.code === code);
   return lang ? lang.name : code;
 };
 const debouncedTranslate = debounce(() => {
-  if (!selectedPlatform || !selectedPlatform.value) {
-    return;
-  }
-  selectedPlatform.value
+  const platform = selectedPlatform.value;
+  if (!platform) return;
+  platform
     .translate(word.value, "auto", selectedLang.value)
     .then((resp: any) => {
       translation.value = resp.result;
@@ -127,7 +215,7 @@ const debouncedTranslate = debounce(() => {
       detectedLang.value = resp.detectedLanguage;
     });
 }, 200);
-const translateWord = () => {
+const translateStorageWord = () => {
   chrome.storage.session.get("lastWord", ({ lastWord }) => {
     if (!lastWord) return;
     word.value = lastWord;
@@ -135,42 +223,17 @@ const translateWord = () => {
   });
 };
 
-const onLangChange = () => translateWord();
-const onPlatformChange = () => translateWord();
-
-const onOriginInput = (event: any) => {
-  const text = event.target.innerText.trim();
-  word.value = text;
-  debouncedTranslate();
+const onLangChange = () => debouncedTranslate();
+const onPlatformChange = () => {
+  getValidPlatforms(allPlatforms)
+    .then((res) => {
+      platforms.value = res;
+      languages.value = selectedPlatform.value?.languages ?? [];
+      selectedLang.value = languages.value[0]?.code ?? "auto";
+    })
+    .then(() => debouncedTranslate());
 };
 
-async function translate(
-  text: string,
-  sourceLanguage: string,
-  targetLanguage: string
-) {
-  const url =
-    "https://translate.googleapis.com/translate_a/single?client=gtx&dt=t&dt=bd" +
-    `&sl=${encodeURIComponent(sourceLanguage)}&tl=${encodeURIComponent(
-      targetLanguage
-    )}` +
-    `&q=${encodeURIComponent(text)}`;
-
-  const response = await fetch(url).then((res) => res.json());
-  const result = response[0].map((v: any) => v[0]).join("");
-  let additional = "";
-  if (response[1]) {
-    response[1].forEach((v: any) => {
-      additional += "<h3>" + v[0] + "</h3>";
-      additional +=
-        "<ol>" +
-        v[1].map((item: any) => "<li>" + item + "</li>").join("") +
-        "</ol>";
-    });
-  }
-  const detectedLanguage = response[2];
-  return { result, additional, detectedLanguage };
-}
 /**
  * 播放 Google TTS 音频
  * @param text 要播放的文本
@@ -213,20 +276,17 @@ async function voice(text: string, language: string): Promise<void> {
 
 const playVoice = () => {
   if (!word.value) return;
-  // const utter = new SpeechSynthesisUtterance(word.value);
-  // utter.lang = selectedLang.value;
-  // speechSynthesis.speak(utter);
   voice(word.value, detectedLang.value);
 };
 
 chrome.storage.session.onChanged.addListener((changes) => {
   const lastWordChange = changes["lastWord"];
   if (!lastWordChange) return;
-  translateWord();
+  translateStorageWord();
 });
 
 // 页面加载时先执行以此
-translateWord();
+translateStorageWord();
 </script>
 
 <style scoped>
@@ -455,5 +515,25 @@ select {
 .origin-editable::-webkit-scrollbar {
   width: 6px;
   background: transparent;
+}
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  min-width: 300px;
 }
 </style>

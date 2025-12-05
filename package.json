@@ -10,18 +10,22 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@tailwindcss/vite": "^4.1.17",
+    "crypto-js": "^4.2.0",
     "json5": "^2.2.3",
     "path": "^0.12.7",
     "source-map-loader": "^5.0.0",
+    "tailwindcss": "^4.1.17",
     "ts-loader": "^9.5.4",
     "vue": "^3.5.24"
   },
   "devDependencies": {
+    "@types/crypto-js": "^4.2.2",
     "@types/node": "^24.10.1",
     "@vitejs/plugin-vue": "^6.0.2",
     "@vue/compiler-sfc": "^3.5.24",
-    "chrome-types": "^0.1.375",
     "@vue/tsconfig": "^0.8.1",
+    "chrome-types": "^0.1.375",
     "typescript": "^5.9.3",
     "vite": "^7.2.4",
     "vue-tsc": "^3.1.5"
