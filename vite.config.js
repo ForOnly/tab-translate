@@ -10,7 +10,6 @@ export default defineConfig({
       input: {
         main: path.resolve(__dirname, "index.html"),
         background: path.resolve(__dirname, "src/background.ts"),
-        content: path.resolve(__dirname, "src/content.ts"),
       },
       output: {
         // 可以指定输出目录或文件名

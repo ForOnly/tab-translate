@@ -41,8 +41,10 @@ class GooglePlatform implements TranslatePlatform<TranslatePlatformConfig> {
     let additional = "";
     if (response[1]) {
       response[1].forEach((v: any) => {
-        additional += "<h3>" + v[0] + "</h3>";
+        additional += `<p class="text-sm font-bold">${v[0]}：</p>`;
+        additional += `<div class="h-px bg-slate-300 my-2"></div>`;
         additional += "<ol>" + v[1].map((item: any) => "<li>" + item + "</li>").join("") + "</ol>";
+        additional += `<div class="h-px bg-white my-2"></div>`;
       });
     }
     return { result, additional, detectedLanguage: response[2] };

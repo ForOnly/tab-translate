@@ -4,7 +4,8 @@
   "version": "1.0",
   "permissions": ["tabs", "sidePanel", "contextMenus", "storage", "scripting"],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
   "icons": {
     "128": "images/favicon-128x128.png",

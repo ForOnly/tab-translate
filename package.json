@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "vue-tsc -b && vite build",
+    "build": "vue-tsc -b && vite build && vite build -c vite.content.config.ts",
     "preview": "vite preview",
     "prettier": "prettier --write '**/*.{js,ts,vue,html,json}'"
   },

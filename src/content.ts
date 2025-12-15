@@ -4,6 +4,7 @@ let debounceTimer: number | undefined;
 let lastText: string = "";
 document.addEventListener("selectionchange", () => {
   clearTimeout(debounceTimer);
+  console.log("ChromeMessageKeyEnum.LAST_SELECTION_TEXT:", ChromeMessageKeyEnum.LAST_SELECTION_TEXT);
   debounceTimer = setTimeout(() => {
     const text = window.getSelection()?.toString().trim();
     if (!text || text === lastText) return;
