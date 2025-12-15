@@ -11,4 +11,3 @@ async function readChromeLocal(key: string): Promise<string> {
 }
 
 export { readChromeLocal };
-

@@ -1,3 +1,5 @@
+import { ChromeMessageKeyEnum } from "@/types/contants";
+
 let debounceTimer: number | undefined;
 let lastText: string = "";
 document.addEventListener("selectionchange", () => {
@@ -8,7 +10,7 @@ document.addEventListener("selectionchange", () => {
     lastText = text;
     chrome?.runtime?.sendMessage &&
       chrome.runtime.sendMessage({
-        action: "LAST_SELECTION_TEXT",
+        action: ChromeMessageKeyEnum.LAST_SELECTION_TEXT,
         text: lastText,
       });
   }, 200); // 停止选中 400ms 后触发

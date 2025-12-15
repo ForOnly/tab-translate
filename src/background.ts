@@ -1,3 +1,5 @@
+import { ChromeMessageKeyEnum } from "@/types/contants";
+
 function setupContextMenu() {
   chrome.contextMenus.create({
     id: "google-translate-sidepanel",
@@ -18,27 +20,21 @@ chrome.contextMenus.onClicked.addListener((data, tab) => {
   chrome.sidePanel.open({ tabId: tab?.id });
 
   // Store the last word in chrome.storage.session.
-  setTimeout(
-    () => chrome.storage.session.set({ lastWord: data.selectionText }),
-    100
-  );
+  setTimeout(() => chrome.storage.session.set({ lastWord: data.selectionText }), 100);
 });
 
 chrome.runtime.onMessage.addListener(
   (
     message: { action: string; text?: string },
     sender: chrome.runtime.MessageSender,
-    sendResponse: (response?: any) => void
+    sendResponse: (response?: any) => void,
   ) => {
     console.log("@message=", message);
-    if (message.action === "LAST_SELECTION_TEXT") {
+    if (message.action === ChromeMessageKeyEnum.LAST_SELECTION_TEXT) {
       if (message.text) {
-        setTimeout(
-          () => chrome.storage.session.set({ lastWord: message.text }),
-          100
-        );
+        setTimeout(() => chrome.storage.session.set({ lastWord: message.text }), 100);
       }
     }
     return true;
-  }
+  },
 );

@@ -8,8 +8,7 @@
 
         <button
           @click="openConfigForm"
-          class="ml-4 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow transition"
-        >
+          class="ml-4 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow transition">
           配置平台
         </button>
       </div>
@@ -17,47 +16,31 @@
 
     <div v-if="showConfigForm" class="modal-backdrop">
       <div class="modal-content">
-        <PlatformConfigForm
-          :platforms="allPlatforms"
-          @updateConfig="onConfigUpdate"
-        />
+        <PlatformConfigForm :platforms="allPlatforms" @updateConfig="onConfigUpdate" />
         <button @click="closeConfigForm">关闭</button>
       </div>
     </div>
 
     <!-- Translation Card -->
-    <div
-      class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow-lg p-6 flex flex-col gap-4"
-    >
+    <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow-lg p-6 flex flex-col gap-4">
       <div class="flex flex-wrap gap-4">
         <!-- 原文区域 -->
-        <div
-          class="flex-1 min-w-[260px] bg-white rounded-xl p-4 shadow-md flex flex-col max-h-[220px]"
-        >
-          <h2 class="text-gray-600 text-base font-medium">
-            Original ({{ getLangName(detectedLang) }})
-          </h2>
+        <div class="flex-1 min-w-[260px] bg-white rounded-xl p-4 shadow-md flex flex-col max-h-[220px]">
+          <h2 class="text-gray-600 text-base font-medium">Original ({{ getLangName(detectedLang) }})</h2>
           <div class="h-px bg-slate-300 my-2"></div>
 
           <textarea
             v-model="word"
             placeholder="Select a word or type here..."
             class="flex-1 text-sm leading-relaxed font-mono text-slate-700 resize-none outline-none bg-transparent"
-            :class="{ 'animate-pulse bg-yellow-100': isPlaying }"
-          ></textarea>
+            :class="{ 'animate-pulse bg-yellow-100': isPlaying }"></textarea>
         </div>
 
         <!-- 翻译区域 -->
-        <div
-          class="flex-1 min-w-[260px] bg-white rounded-xl p-4 shadow-md flex flex-col max-h-[220px]"
-        >
-          <h2 class="text-gray-600 text-base font-medium">
-            Translation ({{ getLangName(selectedLang) }})
-          </h2>
+        <div class="flex-1 min-w-[260px] bg-white rounded-xl p-4 shadow-md flex flex-col max-h-[220px]">
+          <h2 class="text-gray-600 text-base font-medium">Translation ({{ getLangName(selectedLang) }})</h2>
           <div class="h-px bg-slate-300 my-2"></div>
-          <div
-            class="text-sm whitespace-pre-wrap break-all flex-1 overflow-y-auto"
-          >
+          <div class="text-sm whitespace-pre-wrap break-all flex-1 overflow-y-auto">
             {{ translation }}
           </div>
         </div>
@@ -68,8 +51,7 @@
         <select
           v-model="selectedPlatform"
           @change="onPlatformChange"
-          class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm shadow-sm"
-        >
+          class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm shadow-sm">
           <option v-for="p in platforms" :key="p.code" :value="p">
             {{ p.name }}
           </option>
@@ -78,8 +60,7 @@
         <select
           v-model="selectedLang"
           @change="onLangChange"
-          class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm shadow-sm"
-        >
+          class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm shadow-sm">
           <option v-for="lang in languages" :key="lang.code" :value="lang.code">
             {{ lang.name }}
           </option>
@@ -89,8 +70,7 @@
           class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 text-white text-lg shadow transition"
           :class="{ 'animate-bounce bg-blue-700': isPlaying }"
           :disabled="!word"
-          @click="playVoice"
-        >
+          @click="playVoice">
           🔊
         </button>
       </div>
@@ -99,13 +79,10 @@
       <div
         v-if="additional"
         class="bg-blue-100 p-3 rounded-xl max-h-[160px] overflow-y-auto text-sm"
-        v-html="additional"
-      ></div>
+        v-html="additional"></div>
 
       <!-- Footer -->
-      <div class="text-sm text-right text-gray-600">
-        Detected language: {{ getLangName(detectedLang) }}
-      </div>
+      <div class="text-sm text-right text-gray-600">Detected language: {{ getLangName(detectedLang) }}</div>
     </div>
   </div>
 </template>
@@ -114,11 +91,7 @@
 import { debounce } from "@/utils/index.ts";
 import { onMounted, ref, watch } from "vue";
 import PlatformConfigForm from "./components/PlatformConfigForm.vue";
-import {
-  BaiduTranslatePlatform,
-  GooglePlatform,
-  LibrePlatform,
-} from "./utils/translate";
+import { BaiduTranslatePlatform, GooglePlatform, LibrePlatform } from "./utils/translate";
 
 const word = ref("");
 const translation = ref("");
@@ -168,11 +141,7 @@ const onConfigUpdate = (configs: Record<string, Record<string, string>>) => {
   // 关闭配置表单
   closeConfigForm();
 };
-const allPlatforms: TranslatePlatform[] = [
-  new GooglePlatform(),
-  new LibrePlatform(),
-  new BaiduTranslatePlatform(),
-];
+const allPlatforms: TranslatePlatform[] = [new GooglePlatform(), new LibrePlatform(), new BaiduTranslatePlatform()];
 
 onMounted(async () => {
   platforms.value = await getValidPlatforms(allPlatforms);
@@ -185,15 +154,13 @@ watch(word, () => {
   debouncedTranslate();
 });
 
-const getValidPlatforms = async (
-  platforms: TranslatePlatform[]
-): Promise<TranslatePlatform[]> => {
+const getValidPlatforms = async (platforms: TranslatePlatform[]): Promise<TranslatePlatform[]> => {
   // 并行检测每个平台
   const results = await Promise.all(
     platforms.map(async (platform) => ({
       platform,
       ok: await platform.checkPlatform(),
-    }))
+    })),
   );
 
   // 过滤出可用的平台
@@ -207,13 +174,11 @@ const getLangName = (code: string) => {
 const debouncedTranslate = debounce(() => {
   const platform = selectedPlatform.value;
   if (!platform) return;
-  platform
-    .translate(word.value, "auto", selectedLang.value)
-    .then((resp: any) => {
-      translation.value = resp.result;
-      additional.value = resp.additional;
-      detectedLang.value = resp.detectedLanguage;
-    });
+  platform.translate(word.value, "auto", selectedLang.value).then((resp: any) => {
+    translation.value = resp.result;
+    additional.value = resp.additional;
+    detectedLang.value = resp.detectedLanguage;
+  });
 }, 200);
 const translateStorageWord = () => {
   chrome.storage.session.get("lastWord", ({ lastWord }) => {
@@ -485,11 +450,7 @@ select {
 }
 
 .origin-editable.playing {
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 0, 0.2) 50%,
-    transparent 50%
-  );
+  background: linear-gradient(90deg, rgba(255, 255, 0, 0.2) 50%, transparent 50%);
   background-size: 200% 100%;
   animation: highlight 2s linear infinite;
 }

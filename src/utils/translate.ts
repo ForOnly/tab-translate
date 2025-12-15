@@ -19,18 +19,14 @@ class GooglePlatform implements TranslatePlatform<TranslatePlatformConfig> {
       { code: "ru", name: "Русский" },
       { code: "it", name: "Italiano" },
       { code: "pt", name: "Português" },
-    ]
+    ],
   ) {}
 
   getConfig(): Promise<TranslatePlatformConfig> {
     return Promise.resolve(null);
   }
 
-  async translate(
-    text: string,
-    source: string,
-    target: string
-  ): Promise<TranslateResult> {
+  async translate(text: string, source: string, target: string): Promise<TranslateResult> {
     const url =
       "https://translate.googleapis.com/translate_a/single?client=gtx&dt=t&dt=bd" +
       `&sl=${encodeURIComponent(source)}&tl=${encodeURIComponent(target)}` +
@@ -46,10 +42,7 @@ class GooglePlatform implements TranslatePlatform<TranslatePlatformConfig> {
     if (response[1]) {
       response[1].forEach((v: any) => {
         additional += "<h3>" + v[0] + "</h3>";
-        additional +=
-          "<ol>" +
-          v[1].map((item: any) => "<li>" + item + "</li>").join("") +
-          "</ol>";
+        additional += "<ol>" + v[1].map((item: any) => "<li>" + item + "</li>").join("") + "</ol>";
       });
     }
     return { result, additional, detectedLanguage: response[2] };
@@ -66,9 +59,7 @@ class GooglePlatform implements TranslatePlatform<TranslatePlatformConfig> {
 }
 
 // Libre Translate
-class LibrePlatform
-  implements TranslatePlatform<CommonTranslatePlatformConfig>
-{
+class LibrePlatform implements TranslatePlatform<CommonTranslatePlatformConfig> {
   constructor(
     public code: string = "libre",
     public name: string = "Libre Translate",
@@ -86,9 +77,7 @@ class LibrePlatform
       { code: "it", name: "Italiano" },
       { code: "pt", name: "Português" },
     ],
-    public configSchema: PlatformConfigField[] = [
-      { key: "libre.apiKey", label: "Libre apiKey", type: "text" },
-    ]
+    public configSchema: PlatformConfigField[] = [{ key: "libre.apiKey", label: "Libre apiKey", type: "text" }],
   ) {}
 
   async getConfig(): Promise<CommonTranslatePlatformConfig> {
@@ -96,11 +85,7 @@ class LibrePlatform
     return { apiKey };
   }
 
-  async translate(
-    text: string,
-    source: string,
-    target: string
-  ): Promise<TranslateResult> {
+  async translate(text: string, source: string, target: string): Promise<TranslateResult> {
     const url = "https://libretranslate.com/translate";
     const config = await this.getConfig();
     const res = await fetch(url, {
@@ -126,10 +111,7 @@ class LibrePlatform
     }
     let additional = "";
     if (data?.alternatives) {
-      additional +=
-        "<ol>" +
-        data.alternatives.map((item: any) => "<li>" + item + "</li>").join("") +
-        "</ol>";
+      additional += "<ol>" + data.alternatives.map((item: any) => "<li>" + item + "</li>").join("") + "</ol>";
     }
     return {
       result: data.translatedText,
@@ -155,9 +137,7 @@ class LibrePlatform
   }
 }
 
-class BaiduTranslatePlatform
-  implements TranslatePlatform<BaiduTranslatePlatformConfig>
-{
+class BaiduTranslatePlatform implements TranslatePlatform<BaiduTranslatePlatformConfig> {
   constructor(
     public code: string = "Baidu",
     public name: string = "Baidu Translate",
@@ -204,7 +184,7 @@ class BaiduTranslatePlatform
     public configSchema: PlatformConfigField[] = [
       { key: "baidu.apiKey", label: "Baidu apiKey", type: "text" },
       { key: "baidu.appid", label: "Baidu appid", type: "text" },
-    ]
+    ],
   ) {}
 
   async getConfig(): Promise<BaiduTranslatePlatformConfig> {
@@ -213,11 +193,7 @@ class BaiduTranslatePlatform
     return { apiKey, appid };
   }
 
-  async translate(
-    text: string,
-    source: string,
-    target: string
-  ): Promise<TranslateResult> {
+  async translate(text: string, source: string, target: string): Promise<TranslateResult> {
     const config = await this.getConfig();
     const url = "https://fanyi-api.baidu.com/api/trans/vip/translate";
     const salt = new Date().getTime();
@@ -231,7 +207,7 @@ class BaiduTranslatePlatform
         headers: {
           "Content-Type": "application/json",
         },
-      }
+      },
     );
     console.log("baidu====>", res);
     if (res.status != 200) {
@@ -247,12 +223,7 @@ class BaiduTranslatePlatform
     }
     let additional = "";
     if (data?.trans_result) {
-      additional +=
-        "<ol>" +
-        data.trans_result
-          .map((item: any) => "<li>" + item.dst + "</li>")
-          .join("") +
-        "</ol>";
+      additional += "<ol>" + data.trans_result.map((item: any) => "<li>" + item.dst + "</li>").join("") + "</ol>";
     }
     return {
       result: data.trans_result[0].dst,
@@ -277,4 +248,3 @@ class BaiduTranslatePlatform
 }
 
 export { BaiduTranslatePlatform, GooglePlatform, LibrePlatform };
-

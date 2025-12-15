@@ -1,39 +1,26 @@
 <template>
-  <div v-if="platforms && platforms.length">
+  <div>
     <h2>平台配置</h2>
+    <div v-if="platforms && platforms.length">
+      <div v-for="platform in platforms" :key="platform.code" class="platform-card">
+        <h3>{{ platform.name }}</h3>
 
-    <div
-      v-for="platform in platforms"
-      :key="platform.code"
-      class="platform-card"
-    >
-      <h3>{{ platform.name }}</h3>
-
-      <form
-        @submit.prevent="savePlatformConfig(platform.code)"
-        v-if="platform.configSchema"
-      >
-        <div
-          v-for="field in platform.configSchema ?? []"
-          :key="field.key"
-          class="form-field"
-        >
-          <label :for="platform.code + '-' + field.key">{{
-            field.label
-          }}</label>
-          <input
-            :id="platform.code + '-' + field.key"
-            :type="field.type || 'text'"
-            v-model="allConfigs[platform.code]![field.key]"
-          />
-        </div>
-        <button type="submit">保存</button>
-      </form>
-      <p v-else>平台无配置项</p>
+        <form @submit.prevent="savePlatformConfig(platform.code)" v-if="platform.configSchema">
+          <div v-for="field in platform.configSchema ?? []" :key="field.key" class="form-field">
+            <label :for="platform.code + '-' + field.key">{{ field.label }}</label>
+            <input
+              :id="platform.code + '-' + field.key"
+              :type="field.type || 'text'"
+              v-model="allConfigs[platform.code]![field.key]" />
+          </div>
+          <button type="submit">保存</button>
+        </form>
+        <p v-else>平台无配置项</p>
+      </div>
     </div>
-  </div>
-  <div v-else>
-    <p>没有平台可配置。</p>
+    <div v-else>
+      <p>没有平台可配置。</p>
+    </div>
   </div>
 </template>
 
@@ -77,7 +64,7 @@ const initConfigs = () => {
 watch(
   () => props.platforms,
   () => initConfigs(),
-  { immediate: true }
+  { immediate: true },
 );
 
 // 单个平台保存

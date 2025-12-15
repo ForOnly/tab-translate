@@ -26,19 +26,13 @@ declare global {
 
   type TranslatePlatformConfigSchema = PlatformConfigField[];
 
-  interface TranslatePlatform<
-    T extends TranslatePlatformConfig = TranslatePlatformConfig
-  > {
+  interface TranslatePlatform<T extends TranslatePlatformConfig = TranslatePlatformConfig> {
     code: string;
     name: string;
     languages: LanguageMapping;
     configSchema?: TranslatePlatformConfigSchema;
     getConfig: () => Promise<T>;
     checkPlatform: () => Promise<boolean>;
-    translate: (
-      text: string,
-      source: string,
-      target: string
-    ) => Promise<TranslateResult>;
+    translate: (text: string, source: string, target: string) => Promise<TranslateResult>;
   }
 }
