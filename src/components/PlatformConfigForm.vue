@@ -1,25 +1,32 @@
 <template>
   <div>
-    <h2>平台配置</h2>
-    <div v-if="platforms && platforms.length">
-      <div v-for="platform in platforms" :key="platform.code" class="platform-card">
-        <h3>{{ platform.name }}</h3>
-
-        <form @submit.prevent="savePlatformConfig(platform.code)" v-if="platform.configSchema">
-          <div v-for="field in platform.configSchema ?? []" :key="field.key" class="form-field">
-            <label :for="platform.code + '-' + field.key">{{ field.label }}</label>
-            <input
-              :id="platform.code + '-' + field.key"
-              :type="field.type || 'text'"
-              v-model="allConfigs[platform.code]![field.key]" />
-          </div>
-          <button type="submit">保存</button>
-        </form>
-        <p v-else>平台无配置项</p>
-      </div>
+    <div class="m-[1.5rem] py-2 bg-gray-600 text-white rounded-lg shadow transition justify-center text-center">
+      <h2>平台配置</h2>
     </div>
-    <div v-else>
-      <p>没有平台可配置。</p>
+    <div class="p-[1.5rem] pt-0">
+      <div v-if="platforms && platforms.length">
+        <div v-for="platform in platforms" :key="platform.code" class="platform-card">
+          <p class="text-sm font-bold">{{ platform.name }}</p>
+          <div class="h-px bg-slate-300 my-2"></div>
+          <form @submit.prevent="savePlatformConfig(platform.code)" v-if="platform.configSchema">
+            <div v-for="field in platform.configSchema ?? []" :key="field.key" class="form-field">
+              <label :for="platform.code + '-' + field.key">{{ field.label }}</label>
+              <input
+                :id="platform.code + '-' + field.key"
+                :type="field.type || 'text'"
+                v-model="allConfigs[platform.code]![field.key]" />
+            </div>
+            <button type="submit">保存</button>
+          </form>
+          <p v-else>平台无配置项</p>
+        </div>
+      </div>
+      <div v-else>
+        <p>没有平台可配置。</p>
+      </div>
+      <div class="flex justify-end justify-items-end">
+        <button @click="closePlatformConfig">关闭</button>
+      </div>
     </div>
   </div>
 </template>
@@ -30,11 +37,13 @@ import { reactive, watch } from "vue";
 
 interface Props {
   platforms: TranslatePlatform[] | null;
+  visible: boolean | false;
 }
 
 const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: "updateConfig", configs: Record<string, Record<string, string>>): void;
+  (e: "close"): void;
 }>();
 
 // 响应式存储所有平台的配置
@@ -70,6 +79,10 @@ watch(
 // 单个平台保存
 const savePlatformConfig = (platformCode: string) => {
   emit("updateConfig", { ...allConfigs });
+};
+
+const closePlatformConfig = () => {
+  emit("close");
 };
 </script>
 

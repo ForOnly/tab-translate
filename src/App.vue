@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <!-- Header -->
-    <div class="flex flex-col items-start gap-2">
+    <div class="flex flex-col items-start gap-2 mt-5">
       <div class="flex items-center gap-2">
         <span class="material-icons text-3xl text-blue-600">translate</span>
         <h1 class="text-3xl font-bold text-blue-600">Translate Panel</h1>
@@ -9,15 +9,18 @@
         <button
           @click="openConfigForm"
           class="ml-4 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow transition">
-          配置平台
+          平台配置
         </button>
       </div>
     </div>
 
     <div v-if="showConfigForm" class="modal-backdrop">
       <div class="modal-content">
-        <PlatformConfigForm :platforms="allPlatforms" @updateConfig="onConfigUpdate" />
-        <button @click="closeConfigForm">关闭</button>
+        <PlatformConfigForm
+          :platforms="allPlatforms"
+          :visible="configVisible"
+          @updateConfig="onConfigUpdate"
+          @close="closeConfigForm" />
       </div>
     </div>
 
@@ -100,6 +103,7 @@ const detectedLang = ref("auto");
 let globalAudio: HTMLAudioElement | null = null;
 const isPlaying = ref(false);
 const platforms = ref<TranslatePlatform[]>([]);
+const configVisible = ref<boolean>(false);
 const selectedPlatform = ref<TranslatePlatform | null>(null);
 const languages = ref<LanguageMapping>([]);
 const selectedLang = ref("auto");
@@ -493,8 +497,8 @@ select {
 
 .modal-content {
   background: white;
-  padding: 1.5rem;
+  /* padding: 1.5rem; */
   border-radius: 12px;
-  min-width: 300px;
+  min-width: 350px;
 }
 </style>
