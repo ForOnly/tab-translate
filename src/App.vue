@@ -1,10 +1,12 @@
 <template>
   <div id="app">
     <!-- Header -->
-    <div class="flex flex-col items-start gap-2 mt-5">
-      <div class="flex items-center gap-2">
-        <span class="material-icons text-3xl text-blue-600">translate</span>
-        <h1 class="text-3xl font-bold text-blue-600">Translate Panel</h1>
+    <div class="flex flex-col items-start gap-2 mt-5 w-full">
+      <div class="flex items-center gap-2 w-full justify-between">
+        <div class="flex items-center gap-2">
+          <span class="material-icons text-3xl text-blue-600">translate</span>
+          <h1 class="text-3xl font-bold text-blue-600">Translate</h1>
+        </div>
 
         <button
           @click="openConfigForm"
@@ -25,10 +27,11 @@
     </div>
 
     <!-- Translation Card -->
-    <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow-lg p-6 flex flex-col gap-4">
+    <div
+      class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow-lg p-6 flex flex-col gap-4 overflow-hidden">
       <div class="flex flex-wrap gap-4">
         <!-- 原文区域 -->
-        <div class="flex-1 min-w-[260px] bg-white rounded-xl p-4 shadow-md flex flex-col max-h-[220px]">
+        <div class="flex-1 min-w-[260px] bg-white rounded-xl p-4 shadow-md flex flex-col min-h-[150px] max-h-[570px]">
           <h2 class="text-gray-600 text-base font-medium">Original ({{ getLangName(detectedLang) }})</h2>
           <div class="h-px bg-slate-300 my-2"></div>
 
@@ -36,11 +39,11 @@
             v-model="word"
             placeholder="Select a word or type here..."
             class="flex-1 text-sm leading-relaxed font-mono text-slate-700 resize-none outline-none bg-transparent"
-            :class="{ 'animate-pulse bg-yellow-100': isPlaying }"></textarea>
+            :class="{ 'animate-pulse border-2 rounded-xl border-green-700': isPlaying }"></textarea>
         </div>
 
         <!-- 翻译区域 -->
-        <div class="flex-1 min-w-[260px] bg-white rounded-xl p-4 shadow-md flex flex-col max-h-[220px]">
+        <div class="flex-1 min-w-[260px] bg-white rounded-xl p-4 shadow-md flex flex-col min-h-[150px] max-h-[570px]">
           <h2 class="text-gray-600 text-base font-medium">Translation ({{ getLangName(selectedLang) }})</h2>
           <div class="h-px bg-slate-300 my-2"></div>
           <div class="text-sm whitespace-pre-wrap break-all flex-1 overflow-y-auto">
@@ -50,15 +53,14 @@
       </div>
 
       <!-- Controls -->
-      <div class="flex justify-end items-center gap-4">
-        <select
-          v-model="selectedPlatform"
-          @change="onPlatformChange"
-          class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm shadow-sm">
-          <option v-for="p in platforms" :key="p.code" :value="p">
-            {{ p.name }}
-          </option>
-        </select>
+      <div class="flex flex-wrap justify-end items-center gap-4">
+        <button
+          class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-600 hover:bg-gray-700 text-white text-lg shadow transition"
+          :class="{ 'animate-bounce bg-gray-700': isPlaying }"
+          :disabled="!word"
+          @click="playVoice">
+          🔊
+        </button>
 
         <select
           v-model="selectedLang"
@@ -68,14 +70,14 @@
             {{ lang.name }}
           </option>
         </select>
-
-        <button
-          class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 text-white text-lg shadow transition"
-          :class="{ 'animate-bounce bg-blue-700': isPlaying }"
-          :disabled="!word"
-          @click="playVoice">
-          🔊
-        </button>
+        <select
+          v-model="selectedPlatform"
+          @change="onPlatformChange"
+          class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm shadow-sm">
+          <option v-for="p in platforms" :key="p.code" :value="p">
+            {{ p.name }}
+          </option>
+        </select>
       </div>
 
       <!-- Additional -->
@@ -127,12 +129,9 @@ const onConfigUpdate = (configs: Record<string, Record<string, string>>) => {
     for (const fieldKey in platformConfig) {
       const fieldValue = platformConfig[fieldKey];
 
-      // 构建唯一存储 key，例如 "platformCode_fieldKey"
-      const storageKey = `${fieldKey}`;
-
       // 单独保存每个字段
-      chrome.storage.local.set({ [storageKey]: fieldValue }).then(() => {
-        console.log("Value is set:", { storageKey });
+      chrome.storage.local.set({ [fieldKey]: fieldValue }).then(() => {
+        console.log("Value is set:", { fieldKey });
       });
     }
   }

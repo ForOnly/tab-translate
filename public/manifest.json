@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Side Translate Panel",
+  "name": "Side Translate",
   "version": "1.0",
   "permissions": ["tabs", "sidePanel", "contextMenus", "storage", "scripting"],
   "background": {
