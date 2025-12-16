@@ -44,7 +44,18 @@
 
         <!-- 翻译区域 -->
         <div class="flex-1 min-w-[260px] bg-white rounded-xl p-4 shadow-md flex flex-col min-h-[150px] max-h-[570px]">
-          <h2 class="text-gray-600 text-base font-medium">Translation ({{ getLangName(selectedLang) }})</h2>
+          <div class="w-full flex justify-between items-center">
+            <h2 class="text-gray-600 text-base font-medium">Translation ({{ getLangName(selectedLang) }})</h2>
+            <button
+              :disabled="!translation"
+              class="p-1 rounded-md text-sm text-gray-400 hover:text-gray-600 hover:bg-gray-100 active:scale-95 transition"
+              title="复制内容"
+              :class="{ '!text-green-700': copied }"
+              @click="handleCopy(translation)">
+              {{ copied ? "copied" : "❐" }}
+            </button>
+          </div>
+
           <div class="h-px bg-slate-300 my-2"></div>
           <div class="text-sm whitespace-pre-wrap break-all flex-1 overflow-y-auto">
             {{ translation }}
@@ -111,6 +122,7 @@ const languages = ref<LanguageMapping>([]);
 const selectedLang = ref("auto");
 
 const showConfigForm = ref(false);
+const copied = ref(false);
 
 const openConfigForm = () => {
   showConfigForm.value = true;
@@ -118,6 +130,15 @@ const openConfigForm = () => {
 
 const closeConfigForm = () => {
   showConfigForm.value = false;
+};
+
+const handleCopy = (text: string) => {
+  navigator.clipboard.writeText(text).then(() => {
+    copied.value = true;
+    setTimeout(() => {
+      copied.value = false;
+    }, 1000);
+  });
 };
 
 const onConfigUpdate = (configs: Record<string, Record<string, string>>) => {
