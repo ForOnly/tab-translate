@@ -30,6 +30,7 @@ declare global {
     code: string;
     name: string;
     languages: LanguageMapping;
+    defaultDetectLanguage?: string;
     configSchema?: TranslatePlatformConfigSchema;
     getConfig: () => Promise<T>;
     checkPlatform: () => Promise<boolean>;

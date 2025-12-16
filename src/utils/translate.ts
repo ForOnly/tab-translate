@@ -20,6 +20,7 @@ class GooglePlatform implements TranslatePlatform<TranslatePlatformConfig> {
       { code: "it", name: "Italiano" },
       { code: "pt", name: "Português" },
     ],
+    public defaultDetectLanguage: string = "zh-CN",
   ) {}
 
   getConfig(): Promise<TranslatePlatformConfig> {
@@ -80,6 +81,7 @@ class LibrePlatform implements TranslatePlatform<CommonTranslatePlatformConfig> 
       { code: "pt", name: "Português" },
     ],
     public configSchema: PlatformConfigField[] = [{ key: "libre.apiKey", label: "Libre apiKey", type: "text" }],
+    public defaultDetectLanguage: string = "zh-CN",
   ) {}
 
   async getConfig(): Promise<CommonTranslatePlatformConfig> {
@@ -187,6 +189,7 @@ class BaiduTranslatePlatform implements TranslatePlatform<BaiduTranslatePlatform
       { key: "baidu.apiKey", label: "Baidu apiKey", type: "text" },
       { key: "baidu.appid", label: "Baidu appid", type: "text" },
     ],
+    public defaultDetectLanguage: string = "zh",
   ) {}
 
   async getConfig(): Promise<BaiduTranslatePlatformConfig> {

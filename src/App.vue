@@ -159,7 +159,7 @@ const onConfigUpdate = (configs: Record<string, Record<string, string>>) => {
   getValidPlatforms(allPlatforms).then((res) => {
     platforms.value = res;
     languages.value = selectedPlatform.value?.languages ?? [];
-    selectedLang.value = languages.value[0]?.code ?? "auto";
+    selectedLang.value = selectedPlatform.value?.defaultDetectLanguage ?? languages.value[0]?.code ?? "auto";
   });
 
   // 关闭配置表单
@@ -171,7 +171,7 @@ onMounted(async () => {
   platforms.value = await getValidPlatforms(allPlatforms);
   selectedPlatform.value = platforms.value[0]!;
   languages.value = selectedPlatform.value?.languages ?? [];
-  selectedLang.value = languages.value[0]?.code ?? "auto";
+  selectedLang.value = selectedPlatform.value?.defaultDetectLanguage ?? languages.value[0]?.code ?? "auto";
 });
 
 watch(word, () => {
@@ -218,7 +218,7 @@ const onPlatformChange = () => {
     .then((res) => {
       platforms.value = res;
       languages.value = selectedPlatform.value?.languages ?? [];
-      selectedLang.value = languages.value[0]?.code ?? "auto";
+      selectedLang.value = selectedPlatform.value?.defaultDetectLanguage ?? languages.value[0]?.code ?? "auto";
     })
     .then(() => debouncedTranslate());
 };
