@@ -4,5 +4,5 @@ A simple chrome extension to translate tabs
 
 # build
 ```
-npm run build:chrome
+npm run build
 ```

@@ -1,13 +1,34 @@
 import CryptoJS from "crypto-js";
 
-function debounce(fn: Function, delay = 400) {
-  let timer: any = null;
-  return (...args: any[]) => {
-    clearTimeout(timer);
+function debounce<T extends (...args: unknown[]) => unknown>(fn: T, delay = 400) {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  return (...args: Parameters<T>) => {
+    if (timer) clearTimeout(timer);
     timer = setTimeout(() => {
       fn(...args);
     }, delay);
   };
+}
+
+/**
+ * Fetch with timeout
+ * @param url Request URL
+ * @param options Fetch options
+ * @param timeout Timeout in milliseconds (default: 10000)
+ */
+async function fetchWithTimeout(url: string, options?: RequestInit, timeout = 10000): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    return response;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 /**
@@ -28,4 +49,4 @@ function secureRandomString(length: number): string {
   return hex.slice(0, length);
 }
 
-export { debounce, secureRandomString };
+export { debounce, secureRandomString, fetchWithTimeout };

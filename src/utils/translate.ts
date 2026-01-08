@@ -1,5 +1,6 @@
 // Google Translate
 import { readChromeLocal } from "@/utils/chromeUtils";
+import { fetchWithTimeout } from "@/utils/index.ts";
 import MD5 from "crypto-js/md5";
 
 class GooglePlatform implements TranslatePlatform<TranslatePlatformConfig> {
@@ -32,23 +33,34 @@ class GooglePlatform implements TranslatePlatform<TranslatePlatformConfig> {
       "https://translate.googleapis.com/translate_a/single?client=gtx&dt=t&dt=bd" +
       `&sl=${encodeURIComponent(source)}&tl=${encodeURIComponent(target)}` +
       `&q=${encodeURIComponent(text)}`;
-    const response = await fetch(url).then((res) => {
-      if (res.status != 200) {
-        throw Error("Google Translate Api Error");
-      }
-      return res.json();
-    });
-    const result = response[0].map((v: any) => v[0]).join("");
+    const response = await fetchWithTimeout(url, undefined, 10000);
+    if (response.status !== 200) {
+      throw Error("Google Translate Api Error");
+    }
+    const responseData: GoogleTranslateResponse = await response.json();
+
+    // Handle potential undefined array
+    const mainTranslation = responseData[0];
+    if (!mainTranslation || !Array.isArray(mainTranslation)) {
+      throw Error("Invalid Google Translate response format");
+    }
+
+    const result = mainTranslation.map((v) => v[0]).join("");
     let additional = "";
-    if (response[1]) {
-      response[1].forEach((v: any) => {
-        additional += `<p class="text-sm font-bold">${v[0]}：</p>`;
-        additional += `<div class="h-px bg-slate-300 my-2"></div>`;
-        additional += "<ol>" + v[1].map((item: any) => "<li>" + item + "</li>").join("") + "</ol>";
-        additional += `<div class="h-px bg-white my-2"></div>`;
+    const definitions = responseData[1];
+    if (definitions && Array.isArray(definitions)) {
+      definitions.forEach((v) => {
+        if (v && Array.isArray(v) && v.length >= 2) {
+          additional += `<p class="text-sm font-bold">${v[0]}：</p>`;
+          additional += `<div class="h-px bg-slate-300 my-2"></div>`;
+          if (Array.isArray(v[1])) {
+            additional += "<ol>" + v[1].map((item) => "<li>" + item + "</li>").join("") + "</ol>";
+          }
+          additional += `<div class="h-px bg-white my-2"></div>`;
+        }
       });
     }
-    return { result, additional, detectedLanguage: response[2] };
+    return { result, additional, detectedLanguage: responseData[2] || "auto" };
   }
   async checkPlatform(): Promise<boolean> {
     try {
@@ -92,42 +104,45 @@ class LibrePlatform implements TranslatePlatform<CommonTranslatePlatformConfig> 
   async translate(text: string, source: string, target: string): Promise<TranslateResult> {
     const url = "https://libretranslate.com/translate";
     const config = await this.getConfig();
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        q: text,
-        source,
-        target,
-        format: "text",
-        api_key: config.apiKey,
-      }),
-    });
-    if (res.status != 200) {
+    const res = await fetchWithTimeout(
+      url,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          q: text,
+          source,
+          target,
+          format: "text",
+          api_key: config.apiKey,
+        }),
+      },
+      10000,
+    );
+    if (res.status !== 200) {
       throw Error("Libre Translate Api Error");
     }
-    const data = await res.json();
+    const data: LibreTranslateResponse = await res.json();
     if (!data || !data.translatedText) {
-      if (data.error) {
-        throw Error(data.error);
+      if (data?.error) {
+        throw Error(`LibreTranslate Error: ${data.error}`);
       }
-      throw Error("LibreTranslate Error");
+      throw Error("LibreTranslate Error: Invalid response");
     }
     let additional = "";
     if (data?.alternatives) {
-      additional += "<ol>" + data.alternatives.map((item: any) => "<li>" + item + "</li>").join("") + "</ol>";
+      additional += "<ol>" + data.alternatives.map((item) => "<li>" + item + "</li>").join("") + "</ol>";
     }
     return {
       result: data.translatedText,
       additional: additional,
-      detectedLanguage: data.detectedLanguage.language,
+      detectedLanguage: data.detectedLanguage?.language || "auto",
     };
   }
 
   async checkPlatform(): Promise<boolean> {
     try {
       const config = await this.getConfig();
-      console.log("libre===>", config);
       if (!config || !config.apiKey) {
         return false;
       }
@@ -204,7 +219,7 @@ class BaiduTranslatePlatform implements TranslatePlatform<BaiduTranslatePlatform
     const salt = new Date().getTime();
     const sign_str = config.appid + text + salt + config.apiKey;
     const sign = MD5(sign_str).toString();
-    const res = await fetch(
+    const res = await fetchWithTimeout(
       `${url}?q=${encodeURIComponent(text)}&from=${source}&to=${target}` +
         `&appid=${config.appid}&salt=${salt}&sign=${sign}`,
       {
@@ -213,27 +228,26 @@ class BaiduTranslatePlatform implements TranslatePlatform<BaiduTranslatePlatform
           "Content-Type": "application/json",
         },
       },
+      10000,
     );
-    console.log("baidu====>", res);
-    if (res.status != 200) {
+    if (res.status !== 200) {
       throw Error("Baidu Translate Api Error");
     }
-    const data = await res.json();
-    console.log("baidu data====>", data);
-    if (!data || !data.trans_result) {
-      if (data) {
-        throw Error(data);
+    const data: BaiduTranslateResponse = await res.json();
+    if (!data || !data.trans_result || !Array.isArray(data.trans_result) || data.trans_result.length === 0) {
+      if (data?.error_code) {
+        throw Error(`BaiduTranslate Error: ${data.error_code} - ${data.error_msg || "Unknown error"}`);
       }
-      throw Error("BaiduTranslate Error");
+      throw Error("BaiduTranslate Error: Invalid response");
     }
     let additional = "";
-    if (data?.trans_result) {
-      additional += "<ol>" + data.trans_result.map((item: any) => "<li>" + item.dst + "</li>").join("") + "</ol>";
+    if (data.trans_result) {
+      additional += "<ol>" + data.trans_result.map((item) => "<li>" + item.dst + "</li>").join("") + "</ol>";
     }
     return {
-      result: data.trans_result[0].dst,
+      result: data.trans_result[0]!.dst,
       additional: additional,
-      detectedLanguage: data.from,
+      detectedLanguage: data.from || "auto",
     };
   }
 

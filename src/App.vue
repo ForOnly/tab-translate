@@ -14,6 +14,32 @@
           平台配置
         </button>
       </div>
+
+      <!-- Tab Navigation -->
+      <div class="flex border-b border-gray-200 w-full mt-3">
+        <button
+          @click="activeTab = 'translate'"
+          :class="[
+            'px-4 py-2 font-medium text-sm transition-colors',
+            activeTab === 'translate'
+              ? 'text-blue-600 border-b-2 border-blue-600'
+              : 'text-gray-500 hover:text-gray-700'
+          ]">
+          <span class="material-icons align-text-bottom text-base mr-1">translate</span>
+          翻译
+        </button>
+        <button
+          @click="activeTab = 'history'"
+          :class="[
+            'px-4 py-2 font-medium text-sm transition-colors',
+            activeTab === 'history'
+              ? 'text-blue-600 border-b-2 border-blue-600'
+              : 'text-gray-500 hover:text-gray-700'
+          ]">
+          <span class="material-icons align-text-bottom text-base mr-1">history</span>
+          历史
+        </button>
+      </div>
     </div>
 
     <div v-if="showConfigForm" class="modal-backdrop">
@@ -26,94 +52,79 @@
       </div>
     </div>
 
-    <!-- Translation Card -->
-    <div
-      class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow-lg p-6 flex flex-col gap-4 overflow-hidden">
-      <div class="flex flex-wrap gap-4">
-        <!-- 原文区域 -->
-        <div class="flex-1 min-w-[260px] bg-white rounded-xl p-4 shadow-md flex flex-col min-h-[150px] max-h-[570px]">
-          <h2 class="text-gray-600 text-base font-medium">Original ({{ getLangName(detectedLang) }})</h2>
-          <div class="h-px bg-slate-300 my-2"></div>
-
-          <textarea
-            v-model="word"
-            placeholder="Select a word or type here..."
-            class="flex-1 text-sm leading-relaxed font-mono text-slate-700 resize-none outline-none bg-transparent"
-            :class="{ 'animate-pulse border-2 rounded-xl border-green-700': isPlaying }"></textarea>
-        </div>
-
-        <!-- 翻译区域 -->
-        <div class="flex-1 min-w-[260px] bg-white rounded-xl p-4 shadow-md flex flex-col min-h-[150px] max-h-[570px]">
-          <div class="w-full flex justify-between items-center">
-            <h2 class="text-gray-600 text-base font-medium">Translation ({{ getLangName(selectedLang) }})</h2>
-            <button
-              :disabled="!translation"
-              class="p-1 rounded-md text-sm text-gray-400 hover:text-gray-600 hover:bg-gray-100 active:scale-95 transition"
-              title="复制内容"
-              :class="{ '!text-green-700': copied }"
-              @click="handleCopy(translation)">
-              {{ copied ? "copied" : "❐" }}
-            </button>
-          </div>
-
-          <div class="h-px bg-slate-300 my-2"></div>
-          <div class="text-sm whitespace-pre-wrap break-all flex-1 overflow-y-auto">
-            {{ translation }}
-          </div>
-        </div>
-      </div>
-
-      <!-- Controls -->
-      <div class="flex flex-wrap justify-end items-center gap-4">
-        <button
-          class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-600 hover:bg-gray-700 text-white text-lg shadow transition"
-          :class="{ 'animate-bounce bg-gray-700': isPlaying }"
-          :disabled="!word"
-          @click="playVoice">
-          🔊
-        </button>
-
-        <select
-          v-model="selectedLang"
-          @change="onLangChange"
-          class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm shadow-sm">
-          <option v-for="lang in languages" :key="lang.code" :value="lang.code">
-            {{ lang.name }}
-          </option>
-        </select>
-        <select
-          v-model="selectedPlatform"
-          @change="onPlatformChange"
-          class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm shadow-sm">
-          <option v-for="p in platforms" :key="p.code" :value="p">
-            {{ p.name }}
-          </option>
-        </select>
-      </div>
-
-      <!-- Additional -->
+    <!-- Translation Card (shown when translate tab is active) -->
+    <div v-if="activeTab === 'translate'">
       <div
-        v-if="additional"
-        class="bg-blue-100 p-3 rounded-xl max-h-[160px] overflow-y-auto text-sm"
-        v-html="additional"></div>
+        class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow-lg p-6 flex flex-col gap-4 overflow-hidden">
+        <div class="flex flex-wrap gap-4">
+          <!-- 原文区域 -->
+          <TranslationCard
+            :value="word"
+            @update:value="word = $event"
+            title="Original"
+            :subtitle="getLangName(detectedLang)"
+            :is-textarea="true"
+            :placeholder="'Select a word or type here...'"
+            :content-class="isPlaying ? 'animate-pulse border-2 rounded-xl border-green-700' : ''" />
 
-      <!-- Footer -->
-      <div class="text-sm text-right text-gray-600">Detected language: {{ getLangName(detectedLang) }}</div>
+          <!-- 翻译区域 -->
+          <TranslationCard
+            :value="translation"
+            title="Translation"
+            :subtitle="getLangName(selectedLang)"
+            :show-copy-button="true"
+            :copy-text="translation"
+            :copy-button-title="'复制内容'"
+            @copy="handleCopy(translation)" />
+        </div>
+
+        <!-- Controls -->
+        <TranslationControls
+          :is-playing="isPlaying"
+          :has-text="!!word"
+          :selected-lang="selectedLang"
+          :selected-platform="selectedPlatform"
+          :languages="languages"
+          :platforms="platforms"
+          @play-voice="playVoice"
+          @lang-change="onLangChange"
+          @platform-change="onPlatformChange" />
+
+        <!-- Additional -->
+        <AdditionalInfo :content="additional" />
+
+        <!-- Footer -->
+        <TranslationFooter :detected-lang="detectedLang" :get-lang-name="getLangName" />
+      </div>
+    </div>
+
+    <!-- History Panel (shown when history tab is active) -->
+    <div v-else-if="activeTab === 'history'" class="bg-white rounded-2xl shadow-lg p-6">
+      <TranslationHistory
+        :get-lang-name="getLangName"
+        @use-history="onUseHistory" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { debounce } from "@/utils/index.ts";
-import { onMounted, ref, watch } from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import PlatformConfigForm from "./components/PlatformConfigForm.vue";
+import TranslationCard from "./components/TranslationCard.vue";
+import TranslationControls from "./components/TranslationControls.vue";
+import AdditionalInfo from "./components/AdditionalInfo.vue";
+import TranslationFooter from "./components/TranslationFooter.vue";
 import { BaiduTranslatePlatform, GooglePlatform, LibrePlatform } from "./utils/translate";
+import TranslationHistory from "./components/TranslationHistory.vue";
+import { saveToHistory } from "./utils/historyUtils";
 
 const word = ref("");
 const translation = ref("");
 const additional = ref("");
 const detectedLang = ref("auto");
 let globalAudio: HTMLAudioElement | null = null;
+let storageChangeListener: ((changes: { [key: string]: chrome.storage.StorageChange }) => void) | null = null;
 const isPlaying = ref(false);
 const platforms = ref<TranslatePlatform[]>([]);
 const configVisible = ref<boolean>(false);
@@ -123,6 +134,14 @@ const selectedLang = ref("auto");
 
 const showConfigForm = ref(false);
 const copied = ref(false);
+const activeTab = ref<"translate" | "history">("translate");
+
+// Watch selectedLang and save to storage
+watch(selectedLang, (newLang) => {
+  if (newLang && newLang !== "auto") {
+    chrome.storage.local.set({ targetLanguage: newLang });
+  }
+});
 
 const openConfigForm = () => {
   showConfigForm.value = true;
@@ -142,6 +161,9 @@ const handleCopy = (text: string) => {
 };
 
 const onConfigUpdate = (configs: Record<string, Record<string, string>>) => {
+  // 收集所有配置字段到一个对象中
+  const saveData: Record<string, string> = {};
+
   // 遍历每个平台
   for (const platformCode in configs) {
     const platformConfig = configs[platformCode];
@@ -149,21 +171,61 @@ const onConfigUpdate = (configs: Record<string, Record<string, string>>) => {
     // 遍历每个平台的每个字段
     for (const fieldKey in platformConfig) {
       const fieldValue = platformConfig[fieldKey];
-
-      // 单独保存每个字段
-      chrome.storage.local.set({ [fieldKey]: fieldValue }).then(() => {
-        console.log("Value is set:", { fieldKey });
-      });
+      saveData[fieldKey] = fieldValue || "";
     }
   }
-  getValidPlatforms(allPlatforms).then((res) => {
-    platforms.value = res;
-    languages.value = selectedPlatform.value?.languages ?? [];
-    selectedLang.value = selectedPlatform.value?.defaultDetectLanguage ?? languages.value[0]?.code ?? "auto";
-  });
 
-  // 关闭配置表单
-  closeConfigForm();
+  // 批量保存所有字段
+  chrome.storage.local
+    .set(saveData)
+    .then(() => {
+      console.log("All configuration values saved");
+      return getValidPlatforms(allPlatforms);
+    })
+    .then((res) => {
+      platforms.value = res;
+
+      // Update selected platform to match the new platform list
+      if (selectedPlatform.value && res.length > 0) {
+        // Try to find the same platform by code
+        const foundPlatform = res.find(p => p.code === selectedPlatform.value!.code);
+        if (foundPlatform) {
+          selectedPlatform.value = foundPlatform;
+        } else {
+          // Fallback to first available platform
+          selectedPlatform.value = res[0]!;
+        }
+      } else if (res.length > 0) {
+        selectedPlatform.value = res[0]!;
+      } else {
+        selectedPlatform.value = null;
+      }
+
+      // Update languages and selected language based on the selected platform
+      languages.value = selectedPlatform.value?.languages ?? [];
+      if (selectedPlatform.value && languages.value.length > 0) {
+        // Try to keep current language if it exists in new language list
+        const currentLang = selectedLang.value;
+        const langExists = languages.value.some(lang => lang.code === currentLang);
+        if (langExists && currentLang !== "auto") {
+          // Keep current language
+          selectedLang.value = currentLang;
+        } else {
+          // Use platform default or first available language
+          selectedLang.value = selectedPlatform.value.defaultDetectLanguage ?? languages.value[0]?.code ?? "auto";
+        }
+      } else {
+        selectedLang.value = "auto";
+      }
+    })
+    .catch((error) => {
+      console.error("Failed to save configuration:", error);
+      // 可以在这里添加用户通知
+    })
+    .finally(() => {
+      // 关闭配置表单
+      closeConfigForm();
+    });
 };
 const allPlatforms: TranslatePlatform[] = [new GooglePlatform(), new LibrePlatform(), new BaiduTranslatePlatform()];
 
@@ -171,7 +233,26 @@ onMounted(async () => {
   platforms.value = await getValidPlatforms(allPlatforms);
   selectedPlatform.value = platforms.value[0]!;
   languages.value = selectedPlatform.value?.languages ?? [];
-  selectedLang.value = selectedPlatform.value?.defaultDetectLanguage ?? languages.value[0]?.code ?? "auto";
+
+  // Try to load saved target language from storage
+  try {
+    const savedLang = await new Promise<string>((resolve) => {
+      chrome.storage.local.get(["targetLanguage"], (result) => {
+        resolve(result.targetLanguage || "");
+      });
+    });
+
+    // Check if saved language is valid for current platform
+    const isValidLang = languages.value.some(lang => lang.code === savedLang);
+    if (savedLang && isValidLang) {
+      selectedLang.value = savedLang;
+    } else {
+      selectedLang.value = selectedPlatform.value?.defaultDetectLanguage ?? languages.value[0]?.code ?? "auto";
+    }
+  } catch (error) {
+    console.error("Failed to load target language from storage:", error);
+    selectedLang.value = selectedPlatform.value?.defaultDetectLanguage ?? languages.value[0]?.code ?? "auto";
+  }
 });
 
 watch(word, () => {
@@ -198,12 +279,71 @@ const getLangName = (code: string) => {
 const debouncedTranslate = debounce(() => {
   const platform = selectedPlatform.value;
   if (!platform) return;
-  platform.translate(word.value, "auto", selectedLang.value).then((resp: any) => {
-    translation.value = resp.result;
-    additional.value = resp.additional;
-    detectedLang.value = resp.detectedLanguage;
-  });
+  platform
+    .translate(word.value, "auto", selectedLang.value)
+    .then((resp) => {
+      translation.value = resp.result;
+      additional.value = resp.additional;
+      detectedLang.value = resp.detectedLanguage;
+
+      // Save to translation history
+      if (word.value.trim() && resp.result.trim()) {
+        saveToHistory(
+          word.value,
+          resp.result,
+          resp.detectedLanguage || "auto",
+          selectedLang.value,
+          platform.name || platform.code,
+          resp.additional,
+        ).catch((error) => {
+          console.error("Failed to save translation history:", error);
+        });
+      }
+    })
+    .catch((error) => {
+      console.error("Translation failed:", error);
+      translation.value = "Translation error: " + (error.message || "Unknown error");
+      additional.value = "";
+    });
 }, 200);
+
+const onUseHistory = (historyItem: TranslationHistoryItem) => {
+  // Switch to translate tab
+  activeTab.value = "translate";
+
+  // Set the original text
+  word.value = historyItem.originalText;
+
+  // Set the translated text
+  translation.value = historyItem.translatedText;
+
+  // Set additional info if available
+  additional.value = historyItem.additionalInfo || "";
+
+  // Update detected language
+  detectedLang.value = historyItem.sourceLanguage;
+
+  // Try to set the target language if it exists in current languages
+  const targetLangExists = languages.value.some(lang => lang.code === historyItem.targetLanguage);
+  if (targetLangExists) {
+    selectedLang.value = historyItem.targetLanguage;
+  }
+
+  // Try to select the platform if it exists
+  const platformExists = platforms.value.some(p =>
+    p.code === historyItem.platform || p.name === historyItem.platform
+  );
+  if (platformExists && selectedPlatform.value) {
+    const platform = platforms.value.find(p =>
+      p.code === historyItem.platform || p.name === historyItem.platform
+    );
+    if (platform) {
+      selectedPlatform.value = platform;
+      languages.value = platform.languages;
+    }
+  }
+};
+
 const translateStorageWord = () => {
   chrome.storage.session.get("lastWord", ({ lastWord }) => {
     if (!lastWord) return;
@@ -212,13 +352,49 @@ const translateStorageWord = () => {
   });
 };
 
-const onLangChange = () => debouncedTranslate();
-const onPlatformChange = () => {
+const onLangChange = (lang?: string) => {
+  if (lang) {
+    selectedLang.value = lang;
+  }
+  debouncedTranslate();
+};
+const onPlatformChange = (platform?: any) => {
   getValidPlatforms(allPlatforms)
     .then((res) => {
       platforms.value = res;
+
+      // Update selected platform
+      if (platform && res.length > 0) {
+        // Try to find the selected platform in valid platforms
+        const foundPlatform = res.find(p => p.code === platform.code);
+        if (foundPlatform) {
+          selectedPlatform.value = foundPlatform;
+        } else {
+          // Fallback to first available platform
+          selectedPlatform.value = res[0]!;
+        }
+      } else if (res.length > 0) {
+        selectedPlatform.value = res[0]!;
+      } else {
+        selectedPlatform.value = null;
+      }
+
+      // Update languages and selected language
       languages.value = selectedPlatform.value?.languages ?? [];
-      selectedLang.value = selectedPlatform.value?.defaultDetectLanguage ?? languages.value[0]?.code ?? "auto";
+      if (selectedPlatform.value && languages.value.length > 0) {
+        // Try to keep current language if it exists in new language list
+        const currentLang = selectedLang.value;
+        const langExists = languages.value.some(lang => lang.code === currentLang);
+        if (langExists && currentLang !== "auto") {
+          // Keep current language
+          selectedLang.value = currentLang;
+        } else {
+          // Use platform default or first available language
+          selectedLang.value = selectedPlatform.value.defaultDetectLanguage ?? languages.value[0]?.code ?? "auto";
+        }
+      } else {
+        selectedLang.value = "auto";
+      }
     })
     .then(() => debouncedTranslate());
 };
@@ -268,10 +444,23 @@ const playVoice = () => {
   voice(word.value, detectedLang.value);
 };
 
-chrome.storage.session.onChanged.addListener((changes) => {
-  const lastWordChange = changes["lastWord"];
+storageChangeListener = (changes: { [key: string]: chrome.storage.StorageChange }) => {
+  console.log(changes);
+  const lastWordChange = changes.lastWord?.newValue;
   if (!lastWordChange) return;
   translateStorageWord();
+};
+chrome.storage.session.onChanged.addListener(storageChangeListener);
+
+// Cleanup on component unmount
+onUnmounted(() => {
+  if (storageChangeListener) {
+    chrome.storage.session.onChanged.removeListener(storageChangeListener);
+  }
+  if (globalAudio) {
+    globalAudio.pause();
+    globalAudio = null;
+  }
 });
 
 // 页面加载时先执行以此
@@ -285,125 +474,17 @@ translateStorageWord();
   font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   min-height: 100vh;
   margin: 0 1rem 0 1rem;
-  color: #333;
+  color: var(--color-text);
   display: flex;
   flex-direction: column;
   gap: 1rem;
-}
-
-/* Header */
-.header {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.logo .material-icons {
-  font-size: 2rem;
-  color: #0052cc;
-}
-
-.logo h1 {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #0052cc;
-  margin: 0;
-}
-
-.sub-title {
-  font-size: 0.95rem;
-  color: #666;
-}
-
-/* Card */
-.card {
-  background: linear-gradient(135deg, #f0f4ff, #e6f0ff);
-  border-radius: 16px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.card-content {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.text-block {
-  flex: 1;
-  min-width: 250px;
-  background-color: #fff;
-  border-radius: 12px;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  max-height: 200px; /* 整体高度固定 */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-}
-
-.text-block h2 {
-  margin: 0;
-  font-size: 1rem;
-  color: #555;
-}
-
-.divider {
-  height: 1px;
-  background-color: #d0d7e0;
-  margin: 0.3rem 0 0.6rem 0;
-  border-radius: 1px;
-}
-
-.text-block p {
-  margin: 0.5rem 0 0 0;
-  word-wrap: break-word;
-  white-space: pre-wrap;
-}
-
-.scroll-content {
-  overflow-y: auto;
-  flex: 1; /* 占满剩余高度，使标题固定 */
-  word-wrap: break-word;
-  white-space: pre-wrap;
-}
-
-.card-controls {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 0.8rem;
 }
 
 select {
-  padding: 0.4rem 0.8rem;
-  border-radius: 6px;
-  border: 1px solid #bbb;
-  font-size: 0.95rem;
-}
-
-.btn-voice {
-  border: none;
-  background-color: #0052cc;
-  color: #fff;
-  font-size: 1.2rem;
-  padding: 0.4rem 0.6rem;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-voice.playing {
-  animation: bounce 0.5s infinite alternate;
-  background-color: #0066ff;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  font-size: var(--font-size-sm);
 }
 
 /* 简单上下跳动动画 */
@@ -416,69 +497,6 @@ select {
   }
 }
 
-.btn-voice:hover:not(:disabled) {
-  transform: scale(1.1);
-  background-color: #0066ff;
-}
-
-.btn-voice:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Additional info */
-.additional-card {
-  background-color: #e0ebff;
-  padding: 0.8rem 1rem;
-  border-radius: 12px;
-  max-height: 150px;
-  overflow-y: auto;
-}
-
-/* Footer */
-.card-footer {
-  font-size: 0.85rem;
-  color: #666;
-  text-align: right;
-}
-
-/* Info and links */
-.info {
-  font-size: 0.85rem;
-  color: #444;
-}
-
-.link {
-  color: #0052cc;
-  font-weight: 500;
-  text-decoration: none;
-}
-
-.link:hover {
-  text-decoration: underline;
-}
-
-/* Origin 输入区域（可编辑） */
-.origin-editable {
-  width: 100%;
-  min-height: 100%;
-  outline: none;
-  border: none;
-  padding: 0; /* 去掉多余 padding */
-  margin: 0.5rem 0 0 0; /* 和 <p> 保持一致 */
-  font-size: 0.8rem; /* 和 <p> 一致 */
-  line-height: 1.5; /* 与 p 的行高一致 */
-  color: #333;
-  word-wrap: break-word;
-  white-space: pre-wrap;
-}
-
-.origin-editable.playing {
-  background: linear-gradient(90deg, rgba(255, 255, 0, 0.2) 50%, transparent 50%);
-  background-size: 200% 100%;
-  animation: highlight 2s linear infinite;
-}
-
 @keyframes highlight {
   from {
     background-position: 200% 0;
@@ -488,37 +506,4 @@ select {
   }
 }
 
-/* 内容为空时显示 placeholder */
-.origin-editable:empty:before {
-  content: "Select a word or type here...";
-  color: #999;
-  font-size: 0.95rem;
-  line-height: 1.5;
-  pointer-events: none;
-}
-
-.origin-editable::-webkit-scrollbar {
-  width: 6px;
-  background: transparent;
-}
-
-.modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.3);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: white;
-  /* padding: 1.5rem; */
-  border-radius: 12px;
-  min-width: 350px;
-}
 </style>

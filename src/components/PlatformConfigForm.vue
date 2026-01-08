@@ -88,35 +88,37 @@ const closePlatformConfig = () => {
 
 <style scoped>
 .platform-card {
-  margin-bottom: 1rem;
-  padding: 1rem;
-  border-radius: 8px;
-  background-color: #f0f4ff;
+  margin-bottom: var(--space-lg);
+  padding: var(--space-lg);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-primary-light);
 }
 .form-field {
   display: flex;
   flex-direction: column;
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--space-sm);
 }
 label {
   font-weight: 500;
-  margin-bottom: 0.2rem;
+  margin-bottom: var(--space-xs);
 }
 input {
-  padding: 0.4rem 0.6rem;
-  border-radius: 4px;
-  border: 1px solid #bbb;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  font-size: var(--font-size-sm);
 }
 button {
-  margin-top: 0.5rem;
-  padding: 0.4rem 0.8rem;
-  border-radius: 4px;
+  margin-top: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
   border: none;
-  background-color: #0052cc;
-  color: #fff;
+  background-color: var(--color-primary);
+  color: var(--color-white);
   cursor: pointer;
+  font-size: var(--font-size-sm);
 }
 button:hover {
-  background-color: #0066ff;
+  background-color: var(--color-primary-hover);
 }
 </style>
