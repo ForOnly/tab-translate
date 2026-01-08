@@ -43,7 +43,7 @@
           :key="platform"
           @click="togglePlatformFilter(platform)"
           :class="[
-            'px-3 py-1 text-sm rounded-full transition',
+            'px-3 py-1.5 text-sm rounded-full transition-colors',
             platformFilter.includes(platform)
               ? 'bg-blue-100 text-blue-700 border border-blue-300'
               : 'bg-gray-100 text-gray-700 hover:bg-gray-200',
@@ -54,7 +54,7 @@
     </div>
 
     <!-- History List -->
-    <div v-if="filteredHistory.length > 0" class="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+    <div v-if="filteredHistory.length > 0" class="space-y-3 max-h-[500px] overflow-y-auto pr-2">
       <div
         v-for="item in filteredHistory"
         :key="item.id"
@@ -90,7 +90,7 @@
             </div>
           </div>
 
-          <div class="flex flex-col gap-2 ml-3">
+          <div class="flex flex-row gap-2 ml-3">
             <button
               @click="useHistoryItem(item)"
               class="p-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition"

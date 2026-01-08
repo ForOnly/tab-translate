@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex-1 min-w-[260px] bg-white rounded-xl p-4 shadow-md flex flex-col min-h-[150px] max-h-[570px]"
+    class="flex-1 min-w-[200px] bg-white rounded-xl p-4 shadow-md flex flex-col min-h-[150px] max-h-[570px]"
     :class="customClass">
     <!-- 标题区域 -->
     <div v-if="showHeader" class="w-full flex justify-between items-center">
@@ -92,7 +92,7 @@ const displayText = computed(() => {
 })
 
 const copyButtonText = computed(() => {
-  return copied.value ? 'copied' : '❐'
+  return copied.value ? '已复制' : '❐'
 })
 
 const handleInput = (event: Event) => {

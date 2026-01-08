@@ -179,7 +179,7 @@
           </div>
         </div>
 
-        <div class="item-content">
+        <div class="item-content grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="original-section">
             <div class="section-label">原文</div>
             <div class="original-text">{{ item.originalText }}</div>
@@ -188,7 +188,7 @@
               :text="item.originalText"
               :language="item.sourceLanguage"
               :show-audio-button="true"
-              class="phonetic-display" />
+              class="phonetic-display mt-2" />
           </div>
 
           <div class="translation-section">
@@ -975,7 +975,7 @@ defineExpose({
 
 .filter-group {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   align-items: center;
 }
 
@@ -1148,12 +1148,7 @@ defineExpose({
   color: #10b981;
 }
 
-.item-content {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 12px;
-}
+/* .item-content styles removed - using Tailwind grid classes instead */
 
 .original-section, .translation-section {
   display: flex;

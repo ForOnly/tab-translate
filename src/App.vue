@@ -1,11 +1,11 @@
 <template>
   <div id="app">
     <!-- Header -->
-    <div class="flex flex-col items-start gap-2 mt-5 w-full">
+    <div class="flex flex-col items-start gap-2 mt-3 w-full">
       <div class="flex items-center gap-2 w-full justify-between">
         <div class="flex items-center gap-2">
           <span class="material-icons text-3xl text-blue-600">translate</span>
-          <h1 class="text-3xl font-bold text-blue-600">Translate</h1>
+          <h1 class="text-3xl font-bold text-blue-600">翻译</h1>
         </div>
 
         <button
@@ -39,6 +39,28 @@
           <span class="material-icons align-text-bottom text-base mr-1">history</span>
           历史
         </button>
+        <button
+          @click="activeTab = 'vocabulary'"
+          :class="[
+            'px-4 py-2 font-medium text-sm transition-colors',
+            activeTab === 'vocabulary'
+              ? 'text-blue-600 border-b-2 border-blue-600'
+              : 'text-gray-500 hover:text-gray-700'
+          ]">
+          <span class="material-icons align-text-bottom text-base mr-1">bookmark</span>
+          单词本
+        </button>
+        <button
+          @click="activeTab = 'settings'"
+          :class="[
+            'px-4 py-2 font-medium text-sm transition-colors',
+            activeTab === 'settings'
+              ? 'text-blue-600 border-b-2 border-blue-600'
+              : 'text-gray-500 hover:text-gray-700'
+          ]">
+          <span class="material-icons align-text-bottom text-base mr-1">settings</span>
+          设置
+        </button>
       </div>
     </div>
 
@@ -55,22 +77,22 @@
     <!-- Translation Card (shown when translate tab is active) -->
     <div v-if="activeTab === 'translate'">
       <div
-        class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow-lg p-6 flex flex-col gap-4 overflow-hidden">
+        class="bg-white rounded-2xl shadow-lg p-6 flex flex-col gap-4 overflow-hidden">
         <div class="flex flex-wrap gap-4">
           <!-- 原文区域 -->
           <TranslationCard
             :value="word"
             @update:value="word = $event"
-            title="Original"
+            title="原文"
             :subtitle="getLangName(detectedLang)"
             :is-textarea="true"
-            :placeholder="'Select a word or type here...'"
-            :content-class="isPlaying ? 'animate-pulse border-2 rounded-xl border-green-700' : ''" />
+            :placeholder="'请输入或粘贴文本...'"
+            :content-class="isPlaying ? 'animate-pulse border border-green-300 rounded-lg' : ''" />
 
           <!-- 翻译区域 -->
           <TranslationCard
             :value="translation"
-            title="Translation"
+            title="译文"
             :subtitle="getLangName(selectedLang)"
             :show-copy-button="true"
             :copy-text="translation"
@@ -90,6 +112,39 @@
           @lang-change="onLangChange"
           @platform-change="onPlatformChange" />
 
+        <!-- Add to Vocabulary Button and Message -->
+        <div class="flex flex-wrap justify-between items-center gap-3">
+          <button
+            class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg shadow transition flex items-center gap-2"
+            :disabled="!word || !translation"
+            @click="addToVocabularyHandler"
+            title="添加到单词本">
+            <span class="material-icons text-base">bookmark_add</span>
+            <span class="text-sm font-medium">添加到单词本</span>
+          </button>
+
+          <div v-if="vocabularyMessage" class="flex-1 max-w-md">
+            <div
+              class="px-3 py-2 rounded-lg text-sm font-medium"
+              :class="{
+                'bg-green-100 text-green-800 border border-green-200': vocabularyMessageType === 'success',
+                'bg-red-100 text-red-800 border border-red-200': vocabularyMessageType === 'error'
+              }">
+              {{ vocabularyMessage }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Phonetic Display -->
+        <PhoneticDisplay
+          v-if="word && detectedLang !== 'auto'"
+          :text="word"
+          :language="detectedLang"
+          :auto-load="true"
+          :show-audio-button="true"
+          :show-empty="false"
+          class="mt-2" />
+
         <!-- Additional -->
         <AdditionalInfo :content="additional" />
 
@@ -104,6 +159,17 @@
         :get-lang-name="getLangName"
         @use-history="onUseHistory" />
     </div>
+
+    <!-- Vocabulary Book Panel (shown when vocabulary tab is active) -->
+    <div v-else-if="activeTab === 'vocabulary'" class="bg-white rounded-2xl shadow-lg p-6">
+      <VocabularyBook
+        :get-lang-name="getLangName" />
+    </div>
+
+    <!-- Settings Panel (shown when settings tab is active) -->
+    <div v-else-if="activeTab === 'settings'" class="bg-white rounded-2xl shadow-lg p-6">
+      <SettingsPanel />
+    </div>
   </div>
 </template>
 
@@ -115,9 +181,13 @@ import TranslationCard from "./components/TranslationCard.vue";
 import TranslationControls from "./components/TranslationControls.vue";
 import AdditionalInfo from "./components/AdditionalInfo.vue";
 import TranslationFooter from "./components/TranslationFooter.vue";
+import PhoneticDisplay from "./components/PhoneticDisplay.vue";
 import { BaiduTranslatePlatform, GooglePlatform, LibrePlatform } from "./utils/translate";
 import TranslationHistory from "./components/TranslationHistory.vue";
+import VocabularyBook from "./components/VocabularyBook.vue";
+import SettingsPanel from "./components/SettingsPanel.vue";
 import { saveToHistory } from "./utils/historyUtils";
+import { addToVocabulary } from "./utils/vocabularyUtils";
 
 const word = ref("");
 const translation = ref("");
@@ -134,7 +204,58 @@ const selectedLang = ref("auto");
 
 const showConfigForm = ref(false);
 const copied = ref(false);
-const activeTab = ref<"translate" | "history">("translate");
+const activeTab = ref<"translate" | "history" | "vocabulary" | "settings">("translate");
+
+// Vocabulary message state
+const vocabularyMessage = ref("");
+const vocabularyMessageType = ref<"success" | "error">("success");
+
+/**
+ * Add current translation to vocabulary
+ */
+async function addToVocabularyHandler() {
+  if (!word.value || !translation.value) {
+    showVocabularyMessage("请先输入文本并获取翻译", "error");
+    return;
+  }
+
+  try {
+    const platformName = selectedPlatform.value?.name || selectedPlatform.value?.code || "unknown";
+
+    await addToVocabulary(
+      word.value,
+      translation.value,
+      detectedLang.value,
+      selectedLang.value,
+      platformName,
+      undefined, // phonetic (optional)
+      [], // tags (optional)
+      "" // notes (optional)
+    );
+
+    showVocabularyMessage("已成功添加到单词本", "success");
+
+    // Optionally switch to vocabulary tab
+    // activeTab.value = "vocabulary";
+
+  } catch (error) {
+    console.error("Failed to add to vocabulary:", error);
+    showVocabularyMessage(`添加失败: ${error instanceof Error ? error.message : "未知错误"}`, "error");
+  }
+}
+
+/**
+ * Show vocabulary message with auto-clear
+ */
+function showVocabularyMessage(message: string, type: "success" | "error") {
+  vocabularyMessage.value = message;
+  vocabularyMessageType.value = type;
+
+  // Clear message after 3 seconds
+  setTimeout(() => {
+    vocabularyMessage.value = "";
+  }, 3000);
+}
 
 // Watch selectedLang and save to storage
 watch(selectedLang, (newLang) => {
@@ -473,7 +594,7 @@ translateStorageWord();
 #app {
   font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   min-height: 100vh;
-  margin: 0 1rem 0 1rem;
+  margin: 0 0.75rem 0 0.75rem;
   color: var(--color-text);
   display: flex;
   flex-direction: column;

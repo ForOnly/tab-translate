@@ -31,12 +31,84 @@ const LOCAL_PHONETIC_DB: Record<string, string> = {
   alphabet: "/ˈælfəbet/",
   pronunciation: "/prəˌnʌnsiˈeɪʃən/",
 
+  // More common English words
+  english: "/ˈɪŋɡlɪʃ/",
+  chinese: "/ˌtʃaɪˈniːz/",
+  spanish: "/ˈspænɪʃ/",
+  french: "/frentʃ/",
+  german: "/ˈdʒɜːrmən/",
+  japanese: "/ˌdʒæpəˈniːz/",
+  korean: "/kəˈriːən/",
+  russian: "/ˈrʌʃən/",
+  portuguese: "/ˌpɔːrtʃəˈɡiːz/",
+  italian: "/ɪˈtæljən/",
+
+  // Common vocabulary
+  thank: "/θæŋk/",
+  please: "/pliːz/",
+  sorry: "/ˈsɑːri/",
+  yes: "/jes/",
+  no: "/noʊ/",
+  good: "/ɡʊd/",
+  bad: "/bæd/",
+  big: "/bɪɡ/",
+  small: "/smɔːl/",
+  fast: "/fæst/",
+  slow: "/sloʊ/",
+
+  // Days of the week
+  monday: "/ˈmʌndeɪ/",
+  tuesday: "/ˈtuːzdeɪ/",
+  wednesday: "/ˈwenzdeɪ/",
+  thursday: "/ˈθɜːrzdeɪ/",
+  friday: "/ˈfraɪdeɪ/",
+  saturday: "/ˈsætərdeɪ/",
+  sunday: "/ˈsʌndeɪ/",
+
+  // Months
+  january: "/ˈdʒænjueri/",
+  february: "/ˈfebrueri/",
+  march: "/mɑːrtʃ/",
+  april: "/ˈeɪprəl/",
+  may: "/meɪ/",
+  june: "/dʒuːn/",
+  july: "/dʒʊˈlaɪ/",
+  august: "/ˈɔːɡəst/",
+  september: "/sepˈtembər/",
+  october: "/ɑːkˈtoʊbər/",
+  november: "/noʊˈvembər/",
+  december: "/dɪˈsembər/",
+
   // Chinese Pinyin (for demonstration)
   你好: "nǐ hǎo",
   谢谢: "xiè xiè",
   再见: "zài jiàn",
   中国: "zhōng guó",
   美国: "měi guó",
+  英国: "yīng guó",
+  法国: "fǎ guó",
+  德国: "dé guó",
+  日本: "rì běn",
+  韩国: "hán guó",
+
+  // Common Chinese phrases
+  早上好: "zǎo shang hǎo",
+  晚上好: "wǎn shang hǎo",
+  对不起: "duì bu qǐ",
+  没关系: "méi guān xi",
+  我爱你: "wǒ ài nǐ",
+
+  // Numbers
+  一: "yī",
+  二: "èr",
+  三: "sān",
+  四: "sì",
+  五: "wǔ",
+  六: "liù",
+  七: "qī",
+  八: "bā",
+  九: "jiǔ",
+  十: "shí",
 };
 
 /**

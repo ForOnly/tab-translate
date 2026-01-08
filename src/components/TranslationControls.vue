@@ -7,14 +7,14 @@
       :disabled="!hasText"
       @click="emit('playVoice')"
       title="播放语音">
-      🔊
+      <span class="material-icons text-lg">volume_up</span>
     </button>
 
     <!-- 语言选择 -->
     <select
       v-model="localSelectedLang"
       @change="emit('langChange', localSelectedLang)"
-      class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm shadow-sm">
+      class="px-3 py-2 border border-gray-300 rounded-lg text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
       <option v-for="lang in languages" :key="lang.code" :value="lang.code">
         {{ lang.name }}
       </option>
@@ -24,7 +24,7 @@
     <select
       v-model="localSelectedPlatform"
       @change="emit('platformChange', localSelectedPlatform)"
-      class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm shadow-sm">
+      class="px-3 py-2 border border-gray-300 rounded-lg text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
       <option v-for="platform in availablePlatforms" :key="platform.code" :value="platform">
         {{ platform.name }}
       </option>

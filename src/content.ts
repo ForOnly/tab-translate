@@ -35,6 +35,7 @@ let currentSelection: string = "";
 // Side panel state
 let sidePanelOpen = false;
 let sidePanelTimeout: number | undefined;
+let sidePanelCoordination = { enableSimultaneous: false };
 
 /**
  * Set side panel open state with auto-reset timeout
@@ -59,9 +60,12 @@ function setSidePanelOpen(isOpen: boolean, duration: number = 30000) { // 30 sec
 
 // Load configuration from storage
 function loadConfig() {
-  chrome.storage.local.get(['hoverConfig'], (result) => {
+  chrome.storage.local.get(['hoverConfig', 'sidePanelCoordination'], (result) => {
     if (result.hoverConfig) {
       hoverConfig = { ...DEFAULT_HOVER_CONFIG, ...result.hoverConfig };
+    }
+    if (result.sidePanelCoordination) {
+      sidePanelCoordination = { ...sidePanelCoordination, ...result.sidePanelCoordination };
     }
   });
 }
@@ -73,6 +77,9 @@ loadConfig();
 chrome.storage.onChanged.addListener((changes) => {
   if (changes.hoverConfig) {
     hoverConfig = { ...DEFAULT_HOVER_CONFIG, ...changes.hoverConfig.newValue };
+  }
+  if (changes.sidePanelCoordination) {
+    sidePanelCoordination = { ...sidePanelCoordination, ...changes.sidePanelCoordination.newValue };
   }
 });
 
@@ -187,8 +194,8 @@ function showHover(text: string, x: number, y: number) {
     return;
   }
 
-  // Don't show hover if side panel is open
-  if (sidePanelOpen) {
+  // Don't show hover if side panel is open and simultaneous mode is disabled
+  if (sidePanelOpen && !sidePanelCoordination.enableSimultaneous) {
     return;
   }
 
